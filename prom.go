@@ -385,10 +385,12 @@ func (a *Application) CalculateMetrics() error {
 	for _, inv := range a.Inverters {
 		pdi1, err := axpert.ParallelDeviceInfo(inv.Connector, 0)
 		if err != nil {
+			a.Prometheus.Metrics.ScrapeError.Set(1)
 			return fmt.Errorf("error: failed to retrieve parallel device info from device 1 with serialno '%s'", inv.SerialNo)
 		}
 		pdi2, err := axpert.ParallelDeviceInfo(inv.Connector, 1)
 		if err != nil {
+			a.Prometheus.Metrics.ScrapeError.Set(1)
 			return fmt.Errorf("error: failed to retrieve parallel device info from device 1 with serialno '%s'", inv.SerialNo)
 		}
 		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
@@ -400,11 +402,17 @@ func (a *Application) CalculateMetrics() error {
 			inv.SerialNo,
 		)
 
-		// err := p.Session.GetWorkInfo()
-		// if err != nil {
-		// 	a.Prometheus.Metrics.ScrapeError.Set(1)
-		// 	return err
-		// }
+		warnOverload := false
+		wns, err := axpert.WarningStatus(inv.Connector)
+		if err != nil {
+			a.Prometheus.Metrics.ScrapeError.Set(1)
+			return fmt.Errorf("error: failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
+		}
+		for _, wn := range wns {
+			if wn == axpert.WarnOverload {
+				warnOverload = true
+			}
+		}
 
 		// Standard metrics
 
@@ -451,7 +459,7 @@ func (a *Application) CalculateMetrics() error {
 		a.Prometheus.Metrics.SCCChargeOn2Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pdi2.SCC1Charging))
 		a.Prometheus.Metrics.LineLoss1Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pdi1.LineLoss))
 		a.Prometheus.Metrics.LineLoss2Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pdi2.LineLoss))
-		// a.Prometheus.Metrics.OverloadVec.WithLabelValues(labelValues...).Set(convertBoolToFloat())
+		a.Prometheus.Metrics.OverloadVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(warnOverload))
 
 		// Named statuses
 
