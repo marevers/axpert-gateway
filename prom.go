@@ -16,11 +16,8 @@ const (
 	// LabelSerialNumber represents the inverter serial number
 	LabelSerialNumber = "serialno"
 
-	// LabelSource represents the charge/load source
-	LabelSource = "source"
-
-	//LabelWorkMode represents work mode
-	LabelWorkMode = "mode"
+	// LabelMode represents the device mode
+	LabelDeviceMode = "devicemode"
 
 	// Namespace is the metrics prefix
 	Namespace = "axpert"
@@ -32,14 +29,9 @@ var (
 		LabelSerialNumber,
 	}
 
-	labelsSource = []string{
+	labelsDeviceMode = []string{
 		LabelSerialNumber,
-		LabelSource,
-	}
-
-	labelsWorkMode = []string{
-		LabelSerialNumber,
-		LabelWorkMode,
+		LabelDeviceMode,
 	}
 )
 
@@ -82,6 +74,9 @@ type Prometheus struct {
 
 		// Statuses
 		OverloadVec *prometheus.GaugeVec
+
+		// Device mode
+		DeviceModeVec *prometheus.GaugeVec
 
 		// Scrape error
 		ScrapeError prometheus.Gauge
@@ -256,6 +251,13 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Returns 1 if system is overloaded",
 	}, labels)
 
+	// Device mode
+	p.Metrics.DeviceModeVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "devicemode",
+		Namespace: Namespace,
+		Help:      "Shows the device mode - P: PowerOnMode, S: StandbyMode, L: LineMode, B: BatteryMode, F: FaultMode, H: PowerSavingMode",
+	}, labelsDeviceMode)
+
 	// Scrape error
 
 	p.Metrics.ScrapeError = promauto.With(p.Reg).NewGauge(prometheus.GaugeOpts{
@@ -346,6 +348,26 @@ func (a *Application) CalculateMetrics() error {
 			}
 
 			a.Prometheus.Metrics.OverloadVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(warnOverload))
+		}
+
+		// Device mode
+		md, err := axpert.DeviceMode(inv.Connector)
+		if err != nil {
+			a.Prometheus.Metrics.ScrapeError.Set(1)
+			return fmt.Errorf("error: failed to retrieve device mode from device with serialno '%s'", inv.SerialNo)
+		} else {
+			log.Debugln("device mode:", md)
+
+			var labelValuesDeviceMode []string
+
+			labelValuesDeviceMode = append(
+				labelValuesDeviceMode,
+				inv.SerialNo,
+				md,
+			)
+
+			a.Prometheus.Metrics.DeviceModeVec.Reset()
+			a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValuesDeviceMode...).Set(1)
 		}
 
 		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
