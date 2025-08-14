@@ -308,6 +308,7 @@ func (a *Application) CalculateMetrics() error {
 			a.Prometheus.Metrics.AcOutputApparentPowerVec.WithLabelValues(labelValues...).Set(float64(dsp.ACOutputApparentPower))
 			a.Prometheus.Metrics.AcOutputActivePowerVec.WithLabelValues(labelValues...).Set(float64(dsp.ACOutputActivePower))
 			a.Prometheus.Metrics.OutputLoadPercentVec.WithLabelValues(labelValues...).Set(float64(dsp.OutputLoadPercent))
+			a.Prometheus.Metrics.HeatSinkTempVec.WithLabelValues(labelValues...).Set(float64(dsp.HeatSinkTemperature))
 			a.Prometheus.Metrics.BatVoltageVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryVoltage))
 			a.Prometheus.Metrics.BatCapacityVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryCapacity))
 			a.Prometheus.Metrics.BatChgCurrentVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryChargingCurrent))
