@@ -1,0 +1,17 @@
+FROM golang:1.24-bullseye
+
+# Install required dependencies for HID support
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libhidapi-dev \
+    libudev-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY ./go.mod ./go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build the application
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o axpert-gateway .
