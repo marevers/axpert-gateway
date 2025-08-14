@@ -1,4 +1,4 @@
-FROM golang:1.24-bullseye
+FROM golang:1.24-bullseye AS builder
 
 # Install required dependencies for HID support
 RUN apt-get update && apt-get install -y \
@@ -15,3 +15,10 @@ COPY . .
 
 # Build the application
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o axpert-gateway .
+
+# Multistage
+FROM gcr.io/distroless/static-debian12:latest-arm64
+
+COPY --from=builder /axpert-gateway /axpert-gateway
+
+ENTRYPOINT  [ "/axpert-gateway" ]
