@@ -225,13 +225,13 @@ func (p *Prometheus) RegisterMetrics() {
 	p.Metrics.SCCChargeOn2Vec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "sccchargeon2",
 		Namespace: Namespace,
-		Help:      "Returns 1 if line 2 is being charged with solar power 2",
+		Help:      "Returns 1 if battery is being charged with solar power 2",
 	}, labels)
 
 	p.Metrics.SCCChargeOn3Vec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "sccchargeon3",
 		Namespace: Namespace,
-		Help:      "Returns 1 if line 2 is being charged with solar power 3",
+		Help:      "Returns 1 if battery is being charged with solar power 3",
 	}, labels)
 
 	// Parallel device information
@@ -300,7 +300,7 @@ func (a *Application) CalculateMetrics() error {
 			a.Prometheus.Metrics.PvInputVoltage3Vec.WithLabelValues(labelValues...).Set(float64(dsp.PVInputVoltage3))
 			a.Prometheus.Metrics.PvInputCurrent1Vec.WithLabelValues(labelValues...).Set(float64(dsp.PVInputCurrent1))
 			a.Prometheus.Metrics.PvInputCurrent2Vec.WithLabelValues(labelValues...).Set(float64(dsp.PVInputCurrent2))
-			a.Prometheus.Metrics.PvInputCurrent2Vec.WithLabelValues(labelValues...).Set(float64(dsp.PVInputCurrent3))
+			a.Prometheus.Metrics.PvInputCurrent3Vec.WithLabelValues(labelValues...).Set(float64(dsp.PVInputCurrent3))
 			a.Prometheus.Metrics.AcOutputVoltageVec.WithLabelValues(labelValues...).Set(float64(dsp.ACOutputVoltage))
 			a.Prometheus.Metrics.AcOutputFrequencyVec.WithLabelValues(labelValues...).Set(float64(dsp.ACOutputFrequency))
 			a.Prometheus.Metrics.AcOutputApparentPowerVec.WithLabelValues(labelValues...).Set(float64(dsp.ACOutputApparentPower))
