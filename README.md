@@ -1,6 +1,6 @@
 # Axpert Gateway
 
-A Prometheus metrics gateway for Axpert solar inverters, providing real-time monitoring and data collection via USB connectivity.
+A Prometheus metrics gateway for Axpert solar inverters, providing real-time monitoring and data collection via USB connectivity which I build during my well deserved vacation. :)
 
 ## Quick Start
 
