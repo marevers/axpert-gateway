@@ -1,11 +1,10 @@
-FROM golang:1.24-bullseye AS builder
+FROM --platform=linux/arm64 golang:1.24-bullseye AS builder
 
-# Install required dependencies for HID support and cross-compilation
+# Install required dependencies for HID support
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libhidapi-dev \
     libudev-dev \
-    gcc-aarch64-linux-gnu \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -17,18 +16,14 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Set cross-compilation environment variables
+# Set build environment variables
 ENV CGO_ENABLED=1
-ENV GOOS=linux
-ENV GOARCH=arm64
-ENV CC=aarch64-linux-gnu-gcc
-ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
 
 # Build with optimizations
 RUN go build -ldflags="-w -s" -o axpert-gateway .
 
-# Multistage - use Alpine with required libraries
-FROM alpine:latest
+# Multistage
+FROM --platform=linux/arm64 alpine:latest
 
 # Install runtime dependencies for HID support
 RUN apk --no-cache add \
