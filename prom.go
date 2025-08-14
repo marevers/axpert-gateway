@@ -388,12 +388,15 @@ func (a *Application) CalculateMetrics() error {
 			a.Prometheus.Metrics.ScrapeError.Set(1)
 			return fmt.Errorf("error: failed to retrieve parallel device info from device 1 with serialno '%s'", inv.SerialNo)
 		}
+		log.Debugln("pdi1:")
+		log.Debugf("%+v", pdi1)
 		pdi2, err := axpert.ParallelDeviceInfo(inv.Connector, 1)
 		if err != nil {
 			a.Prometheus.Metrics.ScrapeError.Set(1)
 			return fmt.Errorf("error: failed to retrieve parallel device info from device 1 with serialno '%s'", inv.SerialNo)
 		}
-		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
+		log.Debugln("pdi2:")
+		log.Debugf("%+v", pdi2)
 
 		var labelValues []string
 
@@ -408,6 +411,8 @@ func (a *Application) CalculateMetrics() error {
 			a.Prometheus.Metrics.ScrapeError.Set(1)
 			return fmt.Errorf("error: failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
 		}
+		log.Debugln("wns:")
+		log.Debugf("%+v", wns)
 		for _, wn := range wns {
 			if wn == axpert.WarnOverload {
 				warnOverload = true
@@ -486,6 +491,8 @@ func (a *Application) CalculateMetrics() error {
 
 		// a.Prometheus.Metrics.WorkModeVec.Reset()
 		// a.Prometheus.Metrics.WorkModeVec.WithLabelValues(labelValuesWorkMode...).Set(1)
+
+		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
 	}
 
 	return nil
