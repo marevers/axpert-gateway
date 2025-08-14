@@ -27,8 +27,8 @@ ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
 # Build with optimizations
 RUN go build -ldflags="-w -s" -o axpert-gateway .
 
-# Multistage
-FROM gcr.io/distroless/static-debian12:latest-arm64
+# Multistage - use base image with libc for CGO binaries
+FROM gcr.io/distroless/base-debian12:latest-arm64
 
 COPY --from=builder /app/axpert-gateway /axpert-gateway
 
