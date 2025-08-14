@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/marevers/energia/pkg/axpert"
@@ -77,6 +76,9 @@ type Prometheus struct {
 
 		// Device mode
 		DeviceModeVec *prometheus.GaugeVec
+
+		// Output mode
+		OutputModeVec *prometheus.GaugeVec
 
 		// Scrape error
 		ScrapeError prometheus.Gauge
@@ -252,11 +254,21 @@ func (p *Prometheus) RegisterMetrics() {
 	}, labels)
 
 	// Device mode
+
 	p.Metrics.DeviceModeVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "devicemode",
 		Namespace: Namespace,
 		Help:      "Shows the device mode - P: PowerOnMode, S: StandbyMode, L: LineMode, B: BatteryMode, F: FaultMode, H: PowerSavingMode",
 	}, labelsDeviceMode)
+
+	// Output mode
+	// TODO: There seem to be more output modes than the ones below
+
+	p.Metrics.OutputModeVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "outputmode",
+		Namespace: Namespace,
+		Help:      "Shows the output mode - 0: SingleMachine, 1: Parallel, 2: Phase1, 3: Phase2, 4: Phase3",
+	}, labels)
 
 	// Scrape error
 
@@ -275,8 +287,8 @@ func convertBoolToFloat(b bool) float64 {
 	return 0.0
 }
 
-func (a *Application) CalculateMetrics() error {
-	a.Prometheus.Metrics.ScrapeError.Set(0)
+func (a *Application) CalculateMetrics() {
+	scrapeErr := false
 
 	for _, inv := range a.Inverters {
 		var labelValues []string
@@ -289,8 +301,8 @@ func (a *Application) CalculateMetrics() error {
 		// Device status
 		dsp, err := axpert.DeviceGeneralStatus(inv.Connector)
 		if err != nil {
-			a.Prometheus.Metrics.ScrapeError.Set(1)
-			return fmt.Errorf("error: failed to retrieve device general status from from device with serialno '%s'", inv.SerialNo)
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve device general status from from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("device general status:")
 			log.Debugf("%+v", dsp)
@@ -318,8 +330,8 @@ func (a *Application) CalculateMetrics() error {
 		// Parallel device information
 		pi, err := axpert.ParallelDeviceInfo(inv.Connector, 0)
 		if err != nil {
-			a.Prometheus.Metrics.ScrapeError.Set(1)
-			return fmt.Errorf("error: failed to retrieve parallel device info from device with serialno '%s'", inv.SerialNo)
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve parallel device info from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("parallel device information:")
 			log.Debugf("%+v", pi)
@@ -337,8 +349,8 @@ func (a *Application) CalculateMetrics() error {
 
 		wns, err := axpert.WarningStatus(inv.Connector)
 		if err != nil {
-			a.Prometheus.Metrics.ScrapeError.Set(1)
-			return fmt.Errorf("error: failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("wns:")
 			log.Debugf("%+v", wns)
@@ -354,8 +366,8 @@ func (a *Application) CalculateMetrics() error {
 		// Device mode
 		md, err := axpert.DeviceMode(inv.Connector)
 		if err != nil {
-			a.Prometheus.Metrics.ScrapeError.Set(1)
-			return fmt.Errorf("error: failed to retrieve device mode from device with serialno '%s'", inv.SerialNo)
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve device mode from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("device mode:", md)
 
@@ -371,10 +383,27 @@ func (a *Application) CalculateMetrics() error {
 			a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValuesDeviceMode...).Set(1)
 		}
 
+		// Output mode
+		om, err := axpert.DeviceOutputMode(inv.Connector)
+		if err != nil {
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve device output mode from device with serialno '%s'", inv.SerialNo)
+		} else {
+			log.Debugln("device output mode:", om)
+
+			a.Prometheus.Metrics.OutputModeVec.WithLabelValues(labelValues...).Set(float64(om))
+		}
+
 		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
 	}
 
-	return nil
+	if scrapeErr {
+		a.Prometheus.Metrics.ScrapeError.Set(1)
+		return
+	}
+
+	a.Prometheus.Metrics.ScrapeError.Set(0)
+	return
 }
 
 func startMetricsCollection(a *Application, t time.Duration) {
@@ -382,11 +411,7 @@ func startMetricsCollection(a *Application, t time.Duration) {
 	defer tck.Stop()
 
 	for {
-		err := a.CalculateMetrics()
-		if err != nil {
-			log.Warnln(err)
-		}
-
+		a.CalculateMetrics()
 		<-tck.C
 	}
 }
