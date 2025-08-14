@@ -1,11 +1,13 @@
-FROM --platform=linux/arm64 golang:1.24-bullseye AS builder
+# Build stage
+FROM --platform=linux/arm64 golang:1.24-alpine AS builder
 
-# Install required dependencies for HID support
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libhidapi-dev \
-    libudev-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install build dependencies
+RUN apk --no-cache add \
+    gcc \
+    musl-dev \
+    pkgconfig \
+    hidapi-dev \
+    eudev-dev
 
 WORKDIR /app
 
@@ -22,16 +24,22 @@ ENV CGO_ENABLED=1
 # Build with optimizations
 RUN go build -ldflags="-w -s" -o axpert-gateway .
 
-# Multistage
+# Debug: Verify binary was created and check its properties
+RUN ls -la axpert-gateway && file axpert-gateway && ldd axpert-gateway || echo "ldd failed"
+
+# Runtime stage
 FROM --platform=linux/arm64 alpine:latest
 
-# Install runtime dependencies for HID support
+# Install only runtime dependencies
 RUN apk --no-cache add \
     ca-certificates \
     hidapi \
     eudev-libs
 
 COPY --from=builder /app/axpert-gateway /axpert-gateway
+
+# Debug: Check if binary was copied correctly
+RUN ls -la /axpert-gateway && file /axpert-gateway && ldd /axpert-gateway || echo "ldd failed"
 
 # Make executable
 RUN chmod +x /axpert-gateway
