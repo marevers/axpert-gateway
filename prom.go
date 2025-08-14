@@ -213,6 +213,12 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Returns 1 if battery is being charged with utility power",
 	}, labels)
 
+	p.Metrics.ChargeOnVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "chargeon",
+		Namespace: Namespace,
+		Help:      "Returns 1 if battery  is being charged",
+	}, labels)
+
 	p.Metrics.SCCChargeOn1Vec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "sccchargeon1",
 		Namespace: Namespace,
@@ -325,6 +331,11 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.BatCapacityVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryCapacity))
 			a.Prometheus.Metrics.BatChgCurrentVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryChargingCurrent))
 			a.Prometheus.Metrics.BatDischgCurrentVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryDischargeCurrent))
+			a.Prometheus.Metrics.ACChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.ACChargingOn))
+			a.Prometheus.Metrics.ChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.ChargingOn))
+			a.Prometheus.Metrics.SCCChargeOn1Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.SCC1ChargingOn))
+			a.Prometheus.Metrics.SCCChargeOn2Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.SCC2ChargingOn))
+			a.Prometheus.Metrics.SCCChargeOn3Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.SCC3ChargingOn))
 		}
 
 		// Parallel device information
@@ -337,10 +348,6 @@ func (a *Application) CalculateMetrics() {
 			log.Debugf("%+v", pi)
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
-			a.Prometheus.Metrics.ACChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.ACCharging))
-			a.Prometheus.Metrics.SCCChargeOn1Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.SCC1Charging))
-			a.Prometheus.Metrics.SCCChargeOn2Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.SCC2Charging))
-			a.Prometheus.Metrics.SCCChargeOn3Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.SCC3Charging))
 			a.Prometheus.Metrics.LineLossVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LineLoss))
 		}
 
