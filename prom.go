@@ -418,7 +418,7 @@ func (a *Application) CalculateMetrics() {
 				scrapeErr = true
 				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
-				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labels...).Set(md)
+				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(md)
 			}
 		}
 
