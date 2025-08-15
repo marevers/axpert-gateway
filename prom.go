@@ -71,6 +71,11 @@ type Prometheus struct {
 		LineLossVec *prometheus.GaugeVec
 		LoadOnVec   *prometheus.GaugeVec
 
+		// Rating information
+		OutputSourcePrioVec    *prometheus.GaugeVec
+		ChargerSourcePrioVec   *prometheus.GaugeVec
+		MaxACChargerCurrentVec *prometheus.GaugeVec
+
 		// Statuses
 		OverloadVec *prometheus.GaugeVec
 
@@ -251,6 +256,26 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Returns 1 if output has load",
 	}, labels)
 
+	// Rating info
+
+	p.Metrics.OutputSourcePrioVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "output_sourcepriority",
+		Namespace: Namespace,
+		Help:      "Shows the output source priority - 0: Utility first, 1: Solar first, 2: SBU first",
+	}, labels)
+
+	p.Metrics.ChargerSourcePrioVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "charger_sourcepriority",
+		Namespace: Namespace,
+		Help:      "Shows the charger source priority - 0: Utility first, 1: Solar first, 2: Solar and utility, 3: Solar only",
+	}, labels)
+
+	p.Metrics.MaxACChargerCurrentVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "charger_maxcurrent",
+		Namespace: Namespace,
+		Help:      "Max AC charging current in amps",
+	}, labels)
+
 	// Statuses
 
 	p.Metrics.OverloadVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
@@ -349,6 +374,20 @@ func (a *Application) CalculateMetrics() {
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
 			a.Prometheus.Metrics.LineLossVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LineLoss))
+		}
+
+		// Rating info
+		ri, err := axpert.DeviceRatingInfo(inv.Connector)
+		if err != nil {
+			scrapeErr = true
+			log.Errorf("error: failed to retrieve rating info from device with serialno '%s'", inv.SerialNo)
+		} else {
+			log.Debugln("rating information:")
+			log.Debugf("%+v", ri)
+
+			a.Prometheus.Metrics.OutputSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.OutputSourcePriority))
+			a.Prometheus.Metrics.ChargerSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.ChargerSourcePriority))
+			a.Prometheus.Metrics.MaxACChargerCurrentVec.WithLabelValues(labelValues...).Set(float64(ri.MaxACChargingCurrent))
 		}
 
 		// Statuses
