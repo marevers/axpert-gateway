@@ -116,6 +116,21 @@ class AxpertControl {
             return;
         }
 
+        // Show confirmation dialog
+        const commandDisplayName = this.getCommandDisplayName(command);
+        const valueDisplayName = this.getValueDisplayName(command, value);
+        const confirmMessage = `⚠️ CONFIRM INVERTER COMMAND\n\n` +
+            `Inverter: ${selectedInverter}\n` +
+            `Command: ${commandDisplayName}\n` +
+            `Value: ${valueDisplayName}\n\n` +
+            `This will change your inverter settings immediately.\n` +
+            `Are you sure you want to proceed?`;
+
+        if (!confirm(confirmMessage)) {
+            this.showStatus('error', 'Command cancelled by user');
+            return;
+        }
+
         const request: CommandRequest = {
             value: value,
             serialno: selectedInverter
