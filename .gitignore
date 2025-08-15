@@ -36,12 +36,12 @@ Thumbs.db
 
 # Frontend dependencies and compiled files
 frontend/node_modules/
-frontend/package-lock.json
 frontend/app.js
 frontend/app.js.map
 frontend/*.js
 frontend/*.js.map
 !frontend/package.json
+!frontend/package-lock.json
 
 # Logs
 *.log
