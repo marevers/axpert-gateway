@@ -28,11 +28,6 @@ var (
 	labels = []string{
 		LabelSerialNumber,
 	}
-
-	labelsDeviceMode = []string{
-		LabelSerialNumber,
-		LabelDeviceMode,
-	}
 )
 
 type Prometheus struct {
@@ -290,8 +285,8 @@ func (p *Prometheus) RegisterMetrics() {
 	p.Metrics.DeviceModeVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "devicemode",
 		Namespace: Namespace,
-		Help:      "Shows the device mode - P: PowerOnMode, S: StandbyMode, L: LineMode, B: BatteryMode, F: FaultMode, H: PowerSavingMode",
-	}, labelsDeviceMode)
+		Help:      "Shows the device mode - 0: PowerOnMode, 1: StandbyMode, 2: LineMode, 3: BatteryMode, 4: FaultMode, 5: PowerSavingMode",
+	}, labels)
 
 	// Output mode
 	// TODO: There seem to be more output modes than the ones below
@@ -423,16 +418,7 @@ func (a *Application) CalculateMetrics() {
 				scrapeErr = true
 				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
-				var labelValuesDeviceMode []string
-
-				labelValuesDeviceMode = append(
-					labelValuesDeviceMode,
-					inv.SerialNo,
-					md,
-				)
-
-				a.Prometheus.Metrics.DeviceModeVec.Reset()
-				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValuesDeviceMode...).Set(1)
+				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labels...).Set(md)
 			}
 		}
 
@@ -459,22 +445,22 @@ func (a *Application) CalculateMetrics() {
 	return
 }
 
-func parseDeviceMode(m string) (string, error) {
+func parseDeviceMode(m string) (float64, error) {
 	switch m {
-	case "P":
-		return "PowerOn", nil
-	case "S":
-		return "StandBy", nil
-	case "L":
-		return "Utility", nil
-	case "B":
-		return "Battery", nil
-	case "F":
-		return "Fault", nil
-	case "H":
-		return "PowerSaving", nil
+	case "P": // PowerOn
+		return 0.0, nil
+	case "S": // StandBy
+		return 1.0, nil
+	case "L": // Utility
+		return 2.0, nil
+	case "B": // Battery
+		return 3.0, nil
+	case "F": // Fault
+		return 4.0, nil
+	case "H": // PowerSaving
+		return 5.0, nil
 	default:
-		return "", fmt.Errorf("error: unknown device mode: %s", m)
+		return -1.0, fmt.Errorf("error: unknown device mode: %s", m)
 	}
 }
 
