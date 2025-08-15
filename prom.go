@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/marevers/energia/pkg/axpert"
@@ -417,16 +418,22 @@ func (a *Application) CalculateMetrics() {
 		} else {
 			log.Debugln("device mode:", md)
 
-			var labelValuesDeviceMode []string
+			md, err := parseDeviceMode(md)
+			if err != nil {
+				scrapeErr = true
+				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
+			} else {
+				var labelValuesDeviceMode []string
 
-			labelValuesDeviceMode = append(
-				labelValuesDeviceMode,
-				inv.SerialNo,
-				md,
-			)
+				labelValuesDeviceMode = append(
+					labelValuesDeviceMode,
+					inv.SerialNo,
+					md,
+				)
 
-			a.Prometheus.Metrics.DeviceModeVec.Reset()
-			a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValuesDeviceMode...).Set(1)
+				a.Prometheus.Metrics.DeviceModeVec.Reset()
+				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValuesDeviceMode...).Set(1)
+			}
 		}
 
 		// Output mode
@@ -450,6 +457,25 @@ func (a *Application) CalculateMetrics() {
 
 	a.Prometheus.Metrics.ScrapeError.Set(0)
 	return
+}
+
+func parseDeviceMode(m string) (string, error) {
+	switch m {
+	case "P":
+		return "PowerOn", nil
+	case "S":
+		return "StandBy", nil
+	case "L":
+		return "Utility", nil
+	case "B":
+		return "Battery", nil
+	case "F":
+		return "Fault", nil
+	case "H":
+		return "PowerSaving", nil
+	default:
+		return "", fmt.Errorf("error: unknown device mode: %s", m)
+	}
 }
 
 func startMetricsCollection(a *Application, t time.Duration) {
