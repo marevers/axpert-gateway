@@ -11,13 +11,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// CommandRequest represents the JSON body for control API commands
+// Represents the JSON body for control API commands
 type CommandRequest struct {
 	Value    string `json:"value"`
 	SerialNo string `json:"serialno"`
 }
 
-// CommandResponse represents the JSON response for control API commands
+// Represents the JSON response for control API commands
 type CommandResponse struct {
 	Command string `json:"command"`
 	Value   string `json:"value"`
@@ -25,13 +25,13 @@ type CommandResponse struct {
 	Message string `json:"message"`
 }
 
-// CommandHandler defines the signature for command handler functions
+// Defines the signature for command handler functions
 type CommandHandler func(app *Application, req CommandRequest) error
 
-// commandHandlers maps command names to their handler functions
+// Maps command names to their handler functions
 var commandHandlers = map[string]CommandHandler{
-	"setOutputPriority":    handleSetOutputPriority,
-	"setChargerPriority":   handleSetChargerPriority,
+	"setOutputPriority":   handleSetOutputPriority,
+	"setChargerPriority":  handleSetChargerPriority,
 	"setMaxChargeCurrent": handleSetMaxChargeCurrent,
 }
 
@@ -59,7 +59,7 @@ func (a *Application) Routes() http.Handler {
 	return router
 }
 
-// handleCommand handles control API commands
+// Handles control API commands
 func (a *Application) handleCommand(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	command := params.ByName("command")
@@ -78,7 +78,7 @@ func (a *Application) handleCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("Received command: %s with value: %s for serial: %s", command, req.Value, req.SerialNo)
+	log.Infof("Received command: %s with value: %s for serialno: %s", command, req.Value, req.SerialNo)
 
 	// Look up command handler
 	handler, exists := commandHandlers[command]
@@ -118,7 +118,7 @@ func (a *Application) handleCommand(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// findInverterBySerial finds an inverter by its serial number
+// Finds an inverter by its serial number
 func findInverterBySerial(app *Application, serialNo string) (*Inverter, error) {
 	for _, inv := range app.Inverters {
 		if inv.SerialNo == serialNo {
@@ -128,44 +128,44 @@ func findInverterBySerial(app *Application, serialNo string) (*Inverter, error) 
 	return nil, fmt.Errorf("inverter with serial number %s not found", serialNo)
 }
 
-// handleSetOutputPriority sets the output source priority for a specific inverter
+// Sets the output source priority for a specific inverter
 func handleSetOutputPriority(app *Application, req CommandRequest) error {
 	log.Infof("Setting output priority to: %s for inverter: %s", req.Value, req.SerialNo)
-	
+
 	inv, err := findInverterBySerial(app, req.SerialNo)
 	if err != nil {
 		return err
 	}
-	
+
 	return setOutputSourcePriority(inv.Connector, req.Value)
 }
 
-// handleSetChargerPriority sets the charger source priority for a specific inverter
+// Sets the charger source priority for a specific inverter
 func handleSetChargerPriority(app *Application, req CommandRequest) error {
 	log.Infof("Setting charger priority to: %s for inverter: %s", req.Value, req.SerialNo)
-	
+
 	inv, err := findInverterBySerial(app, req.SerialNo)
 	if err != nil {
 		return err
 	}
-	
+
 	return setChargerSourcePriority(inv.Connector, req.Value)
 }
 
-// handleSetMaxChargeCurrent sets the maximum AC charge current for a specific inverter
+// Sets the maximum AC charge current for a specific inverter
 func handleSetMaxChargeCurrent(app *Application, req CommandRequest) error {
 	log.Infof("Setting max charge current to: %s for inverter: %s", req.Value, req.SerialNo)
-	
+
 	// Convert string value to uint8
 	current, err := strconv.ParseUint(req.Value, 10, 8)
 	if err != nil {
 		return fmt.Errorf("invalid current value: %s", req.Value)
 	}
-	
+
 	inv, err := findInverterBySerial(app, req.SerialNo)
 	if err != nil {
 		return err
 	}
-	
+
 	return setMaxACChargeCurrent(inv.Connector, uint8(current))
 }
