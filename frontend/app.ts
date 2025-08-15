@@ -26,12 +26,26 @@ class AxpertControl {
     private statusDisplay: HTMLElement;
     private statusIcon: HTMLElement;
     private statusMessage: HTMLElement;
+    private confirmationModal: HTMLElement;
+    private modalInverter: HTMLElement;
+    private modalCommand: HTMLElement;
+    private modalValue: HTMLElement;
+    private modalCancel: HTMLButtonElement;
+    private modalConfirm: HTMLButtonElement;
 
     constructor() {
         this.inverterSelect = document.getElementById('inverterSelect') as HTMLSelectElement;
         this.statusDisplay = document.getElementById('statusDisplay') as HTMLElement;
         this.statusIcon = this.statusDisplay.querySelector('.status-icon') as HTMLElement;
         this.statusMessage = this.statusDisplay.querySelector('.status-message') as HTMLElement;
+        
+        // Modal elements
+        this.confirmationModal = document.getElementById('confirmationModal') as HTMLElement;
+        this.modalInverter = document.getElementById('modalInverter') as HTMLElement;
+        this.modalCommand = document.getElementById('modalCommand') as HTMLElement;
+        this.modalValue = document.getElementById('modalValue') as HTMLElement;
+        this.modalCancel = document.getElementById('modalCancel') as HTMLButtonElement;
+        this.modalConfirm = document.getElementById('modalConfirm') as HTMLButtonElement;
 
         this.init();
     }
@@ -116,17 +130,12 @@ class AxpertControl {
             return;
         }
 
-        // Show confirmation dialog
+        // Show confirmation modal
         const commandDisplayName = this.getCommandDisplayName(command);
         const valueDisplayName = this.getValueDisplayName(command, value);
-        const confirmMessage = `⚠️ CONFIRM INVERTER COMMAND\n\n` +
-            `Inverter: ${selectedInverter}\n` +
-            `Command: ${commandDisplayName}\n` +
-            `Value: ${valueDisplayName}\n\n` +
-            `This will change your inverter settings immediately.\n` +
-            `Are you sure you want to proceed?`;
-
-        if (!confirm(confirmMessage)) {
+        
+        const confirmed = await this.showConfirmationModal(selectedInverter, commandDisplayName, valueDisplayName);
+        if (!confirmed) {
             this.showStatus('error', 'Command cancelled by user');
             return;
         }
@@ -203,6 +212,50 @@ class AxpertControl {
         setTimeout(() => {
             this.statusDisplay.classList.add('hidden');
         }, 5000);
+    }
+
+    private showConfirmationModal(inverter: string, command: string, value: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            // Populate modal content
+            this.modalInverter.textContent = inverter;
+            this.modalCommand.textContent = command;
+            this.modalValue.textContent = value;
+
+            // Show modal
+            this.confirmationModal.classList.remove('hidden');
+
+            // Handle modal actions
+            const handleConfirm = () => {
+                this.confirmationModal.classList.add('hidden');
+                this.modalConfirm.removeEventListener('click', handleConfirm);
+                this.modalCancel.removeEventListener('click', handleCancel);
+                document.removeEventListener('keydown', handleEscape);
+                resolve(true);
+            };
+
+            const handleCancel = () => {
+                this.confirmationModal.classList.add('hidden');
+                this.modalConfirm.removeEventListener('click', handleConfirm);
+                this.modalCancel.removeEventListener('click', handleCancel);
+                document.removeEventListener('keydown', handleEscape);
+                resolve(false);
+            };
+
+            const handleEscape = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') {
+                    handleCancel();
+                }
+            };
+
+            // Add event listeners
+            this.modalConfirm.addEventListener('click', handleConfirm);
+            this.modalCancel.addEventListener('click', handleCancel);
+            document.addEventListener('keydown', handleEscape);
+
+            // Close modal when clicking overlay
+            const overlay = this.confirmationModal.querySelector('.modal-overlay') as HTMLElement;
+            overlay.addEventListener('click', handleCancel, { once: true });
+        });
     }
 
     private setLoading(loading: boolean): void {

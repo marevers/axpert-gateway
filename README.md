@@ -27,6 +27,7 @@ docker run -d \
 #### Prerequisites
 
 - Go 1.24.6 or later
+- Node.js 22 or later (for frontend development)
 - libhidapi-dev and libudev-dev (for USB HID support)
 - pkg-config
 
@@ -37,14 +38,20 @@ docker run -d \
 git clone https://github.com/marevers/axpert-gateway.git
 cd axpert-gateway
 
-# Install dependencies (Ubuntu/Debian)
+# Install Go dependencies (Ubuntu/Debian)
 sudo apt-get install pkg-config libhidapi-dev libudev-dev
+
+# Build frontend (required for control interface)
+cd frontend
+npm install
+npx tsc app.ts --target es2017 --lib es2017,dom --outDir .
+cd ..
 
 # Build the application
 go build -o axpert-gateway .
 
-# Run the application
-./axpert-gateway
+# Run the application with control API enabled
+./axpert-gateway --axpert.control=true
 ```
 
 #### Cross-compile for Raspberry Pi (arm64)
@@ -54,6 +61,23 @@ To cross-compile for Raspberry Pi, you can build using the included build script
 ```bash
 ./build.sh
 ```
+
+#### Development
+
+The project includes a TypeScript-based frontend located in the `frontend/` directory:
+
+```bash
+# Frontend development
+cd frontend
+npm install                    # Install dependencies
+npx tsc app.ts --target es2017 --lib es2017,dom --outDir .  # Compile TypeScript
+```
+
+**Frontend Files:**
+- `frontend/app.ts` - TypeScript source code
+- `frontend/index.html` - Main HTML interface
+- `frontend/styles.css` - CSS styling
+- `frontend/package.json` - npm configuration
 
 ## Configuration
 
@@ -66,7 +90,7 @@ The application supports the following command-line flags:
 | `--web.telemetry-path` | `/metrics` | Path under which to expose metrics |
 | `--axpert.interval` | `30` | Interval in seconds for data polling |
 | `--axpert.metrics` | `true` | Enable/disable metrics collection |
-| `--axpert.control` | `false` | Enable/disable control API (future feature) |
+| `--axpert.control` | `false` | Enable/disable control API |
 
 ### Example Usage
 
@@ -84,6 +108,93 @@ The application supports the following command-line flags:
 - **`/`** - Landing page with links to available endpoints
 - **`/metrics`** - Prometheus metrics endpoint
 - **`/healthz`** - Health check endpoint
+- **`/control/`** - Web-based control interface (when control API is enabled)
+- **`/api/inverters`** - List available inverters (JSON API)
+- **`/api/command/:command`** - Execute inverter commands (JSON API)
+
+## Control API & Web Interface
+
+The gateway now includes a comprehensive control API and web interface for managing your Axpert inverters remotely.
+
+### 🔋 Web Control Interface
+
+Access the modern web interface at: `http://localhost:8080/control/`
+
+**Features:**
+- **🎯 Inverter Selection** - Dynamic dropdown populated from connected inverters
+- **⚡ Output Priority Control** - Set utility/solar/SBU priority with one click
+- **🔌 Charger Priority Control** - Configure charging source preferences
+- **⚡ Max Charge Current** - Set AC charging current limits (1-100A)
+- **🛡️ Safety Confirmations** - Confirmation dialogs prevent accidental changes
+- **📱 Responsive Design** - Works on desktop, tablet, and mobile devices
+- **🔋 Battery Favicon** - Professional branding with battery emoji
+
+### 🚀 Control API Endpoints
+
+Enable the control API with the `--axpert.control=true` flag.
+
+#### List Inverters
+```bash
+GET /api/inverters
+```
+
+**Response:**
+```json
+{
+  "inverters": [
+    {"serialno": "INV001234"},
+    {"serialno": "INV005678"}
+  ],
+  "count": 2
+}
+```
+
+#### Execute Commands
+```bash
+POST /api/command/:command
+Content-Type: application/json
+
+{
+  "value": "solar",
+  "serialno": "INV001234"
+}
+```
+
+**Available Commands:**
+- `setOutputPriority` - Values: `utility`, `solar`, `sbu`
+- `setChargerPriority` - Values: `utilityfirst`, `solarfirst`, `solarandutility`, `solaronly`
+- `setMaxChargeCurrent` - Values: `1-100` (amperes)
+
+**Response:**
+```json
+{
+  "command": "setOutputPriority",
+  "value": "solar",
+  "status": "success",
+  "message": "Command executed successfully"
+}
+```
+
+### 🔒 Safety Features
+
+- **Targeted Control** - Commands target specific inverters by serial number
+- **Confirmation Dialogs** - Web interface requires user confirmation
+- **Error Handling** - Comprehensive error messages and status feedback
+- **Disabled by Default** - Control API must be explicitly enabled
+
+### 📋 Example Usage
+
+```bash
+# Enable control API and start gateway
+./axpert-gateway --axpert.control=true
+
+# Set output priority via API
+curl -X POST http://localhost:8080/api/command/setOutputPriority \
+  -H "Content-Type: application/json" \
+  -d '{"value": "solar", "serialno": "INV001234"}'
+
+# Or use the web interface at http://localhost:8080/control/
+```
 
 ## Metrics
 

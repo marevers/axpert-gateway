@@ -86,6 +86,40 @@
                 <span class="status-message"></span>
             </div>
         </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmationModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Confirm Inverter Command</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="command-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Inverter:</span>
+                            <span class="detail-value" id="modalInverter"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Command:</span>
+                            <span class="detail-value" id="modalCommand"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Value:</span>
+                            <span class="detail-value" id="modalValue"></span>
+                        </div>
+                    </div>
+                    <div class="warning-message">
+                        <p>⚠️ This will change your inverter settings immediately.</p>
+                        <p>Are you sure you want to proceed?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn cancel-btn" id="modalCancel">Cancel</button>
+                    <button class="modal-btn confirm-btn" id="modalConfirm">Confirm</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
