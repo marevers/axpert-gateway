@@ -281,6 +281,10 @@ header p {
     justify-content: center;
 }
 
+.modal.hidden {
+    display: none !important;
+}
+
 .modal-overlay {
     position: absolute;
     top: 0;

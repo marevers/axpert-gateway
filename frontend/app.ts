@@ -221,12 +221,16 @@ class AxpertControl {
             this.modalCommand.textContent = command;
             this.modalValue.textContent = value;
 
+            // Lock background scrolling
+            this.lockBodyScroll();
+
             // Show modal
             this.confirmationModal.classList.remove('hidden');
 
             // Handle modal actions
             const handleConfirm = () => {
                 this.confirmationModal.classList.add('hidden');
+                this.unlockBodyScroll();
                 this.modalConfirm.removeEventListener('click', handleConfirm);
                 this.modalCancel.removeEventListener('click', handleCancel);
                 document.removeEventListener('keydown', handleEscape);
@@ -235,6 +239,7 @@ class AxpertControl {
 
             const handleCancel = () => {
                 this.confirmationModal.classList.add('hidden');
+                this.unlockBodyScroll();
                 this.modalConfirm.removeEventListener('click', handleConfirm);
                 this.modalCancel.removeEventListener('click', handleCancel);
                 document.removeEventListener('keydown', handleEscape);
@@ -256,6 +261,29 @@ class AxpertControl {
             const overlay = this.confirmationModal.querySelector('.modal-overlay') as HTMLElement;
             overlay.addEventListener('click', handleCancel, { once: true });
         });
+    }
+
+    private lockBodyScroll(): void {
+        // Store current scroll position
+        const scrollY = window.scrollY;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+    }
+
+    private unlockBodyScroll(): void {
+        // Get the stored scroll position
+        const scrollY = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        
+        // Restore scroll position
+        if (scrollY) {
+            window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
     }
 
     private setLoading(loading: boolean): void {

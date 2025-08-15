@@ -114,22 +114,18 @@ The application supports the following command-line flags:
 
 ## Control API & Web Interface
 
-The gateway now includes a comprehensive control API and web interface for managing your Axpert inverters remotely.
+The gateway includes a control API and web interface for managing your Axpert inverters remotely.
 
-### 🔋 Web Control Interface
+### Web Control Interface
 
-Access the modern web interface at: `http://localhost:8080/control/`
+Access the web interface at: `http://localhost:8080/control/`
 
 **Features:**
-- **🎯 Inverter Selection** - Dynamic dropdown populated from connected inverters
-- **⚡ Output Priority Control** - Set utility/solar/SBU priority with one click
-- **🔌 Charger Priority Control** - Configure charging source preferences
-- **⚡ Max Charge Current** - Set AC charging current limits (1-100A)
-- **🛡️ Safety Confirmations** - Confirmation dialogs prevent accidental changes
-- **📱 Responsive Design** - Works on desktop, tablet, and mobile devices
-- **🔋 Battery Favicon** - Professional branding with battery emoji
+- **Output Priority Control** - Set utility/solar/SBU priority with one click
+- **Charger Priority Control** - Configure charging source preferences
+- **Max Charge Current** - Set AC charging current limits (1-100A)
 
-### 🚀 Control API Endpoints
+### Control API Endpoints
 
 Enable the control API with the `--axpert.control=true` flag.
 
@@ -142,8 +138,8 @@ GET /api/inverters
 ```json
 {
   "inverters": [
-    {"serialno": "INV001234"},
-    {"serialno": "INV005678"}
+    {"serialno": "12456789000000"},
+    {"serialno": "12456789000000"}
   ],
   "count": 2
 }
@@ -156,7 +152,7 @@ Content-Type: application/json
 
 {
   "value": "solar",
-  "serialno": "INV001234"
+  "serialno": "12456789000000"
 }
 ```
 
@@ -175,13 +171,6 @@ Content-Type: application/json
 }
 ```
 
-### 🔒 Safety Features
-
-- **Targeted Control** - Commands target specific inverters by serial number
-- **Confirmation Dialogs** - Web interface requires user confirmation
-- **Error Handling** - Comprehensive error messages and status feedback
-- **Disabled by Default** - Control API must be explicitly enabled
-
 ### 📋 Example Usage
 
 ```bash
@@ -191,7 +180,7 @@ Content-Type: application/json
 # Set output priority via API
 curl -X POST http://localhost:8080/api/command/setOutputPriority \
   -H "Content-Type: application/json" \
-  -d '{"value": "solar", "serialno": "INV001234"}'
+  -d '{"value": "solar", "serialno": "12456789000000"}'
 
 # Or use the web interface at http://localhost:8080/control/
 ```
