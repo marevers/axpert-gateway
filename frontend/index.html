@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axpert Gateway Control</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔋 Axpert Gateway Control</h1>
+            <p>Control your solar inverters remotely</p>
+        </header>
+
+        <div class="inverter-selector">
+            <label for="inverterSelect">Select Inverter:</label>
+            <select id="inverterSelect">
+                <option value="">Loading inverters...</option>
+            </select>
+        </div>
+
+        <div class="control-sections">
+            <!-- Output Priority Section -->
+            <section class="control-section">
+                <h2>⚡ Output Priority</h2>
+                <p>Set the output source priority for the inverter</p>
+                <div class="button-group">
+                    <button class="control-btn" data-command="setOutputPriority" data-value="utility">
+                        🏠 Utility First
+                    </button>
+                    <button class="control-btn" data-command="setOutputPriority" data-value="solar">
+                        ☀️ Solar First
+                    </button>
+                    <button class="control-btn" data-command="setOutputPriority" data-value="sbu">
+                        🔋 SBU First
+                    </button>
+                </div>
+            </section>
+
+            <!-- Charger Priority Section -->
+            <section class="control-section">
+                <h2>🔌 Charger Priority</h2>
+                <p>Set the charger source priority for the inverter</p>
+                <div class="button-group">
+                    <button class="control-btn" data-command="setChargerPriority" data-value="utilityfirst">
+                        🏠 Utility First
+                    </button>
+                    <button class="control-btn" data-command="setChargerPriority" data-value="solarfirst">
+                        ☀️ Solar First
+                    </button>
+                    <button class="control-btn" data-command="setChargerPriority" data-value="solarandutility">
+                        🔄 Solar & Utility
+                    </button>
+                    <button class="control-btn" data-command="setChargerPriority" data-value="solaronly">
+                        ☀️ Solar Only
+                    </button>
+                </div>
+            </section>
+
+            <!-- Max Charge Current Section -->
+            <section class="control-section">
+                <h2>⚡ Max Charge Current</h2>
+                <p>Set the maximum AC charge current (Amperes)</p>
+                <div class="input-group">
+                    <input 
+                        type="number" 
+                        id="chargeCurrentInput" 
+                        min="1" 
+                        max="100" 
+                        placeholder="Enter amperes (1-100)"
+                        class="current-input"
+                    >
+                    <button class="control-btn primary" id="setChargeCurrentBtn">
+                        Set Current
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Status Display -->
+        <div id="statusDisplay" class="status-display hidden">
+            <div class="status-content">
+                <span class="status-icon"></span>
+                <span class="status-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

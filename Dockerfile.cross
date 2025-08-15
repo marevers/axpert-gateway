@@ -35,5 +35,6 @@ RUN apk --no-cache add \
     eudev-libs
 
 COPY --from=builder /app/axpert-gateway /axpert-gateway
+COPY --from=builder /app/frontend /frontend
 
 ENTRYPOINT  [ "/axpert-gateway" ]
