@@ -57,15 +57,15 @@ type Prometheus struct {
 		BatChgCurrentVec    *prometheus.GaugeVec
 		BatDischgCurrentVec *prometheus.GaugeVec
 
-		ACChargeOnVec   *prometheus.GaugeVec
 		ChargeOnVec     *prometheus.GaugeVec
 		SCCChargeOn1Vec *prometheus.GaugeVec
 		SCCChargeOn2Vec *prometheus.GaugeVec
 		SCCChargeOn3Vec *prometheus.GaugeVec
 
 		// Parallel device information
-		LineLossVec *prometheus.GaugeVec
-		LoadOnVec   *prometheus.GaugeVec
+		LineLossVec   *prometheus.GaugeVec
+		LoadOnVec     *prometheus.GaugeVec
+		ACChargeOnVec *prometheus.GaugeVec
 
 		// Rating information
 		OutputSourcePrioVec    *prometheus.GaugeVec
@@ -208,12 +208,6 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Battery discharge current in amps",
 	}, labels)
 
-	p.Metrics.ACChargeOnVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
-		Name:      "acchargeon",
-		Namespace: Namespace,
-		Help:      "Returns 1 if battery is being charged with utility power",
-	}, labels)
-
 	p.Metrics.ChargeOnVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "chargeon",
 		Namespace: Namespace,
@@ -250,6 +244,12 @@ func (p *Prometheus) RegisterMetrics() {
 		Name:      "loadon",
 		Namespace: Namespace,
 		Help:      "Returns 1 if output has load",
+	}, labels)
+
+	p.Metrics.ACChargeOnVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "acchargeon",
+		Namespace: Namespace,
+		Help:      "Returns 1 if battery is being charged with utility power",
 	}, labels)
 
 	// Rating info
@@ -352,7 +352,6 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.BatCapacityVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryCapacity))
 			a.Prometheus.Metrics.BatChgCurrentVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryChargingCurrent))
 			a.Prometheus.Metrics.BatDischgCurrentVec.WithLabelValues(labelValues...).Set(float64(dsp.BatteryDischargeCurrent))
-			a.Prometheus.Metrics.ACChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.ACChargingOn))
 			a.Prometheus.Metrics.ChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.ChargingOn))
 			a.Prometheus.Metrics.SCCChargeOn1Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.SCC1ChargingOn))
 			a.Prometheus.Metrics.SCCChargeOn2Vec.WithLabelValues(labelValues...).Set(convertBoolToFloat(dsp.SCC2ChargingOn))
@@ -370,6 +369,7 @@ func (a *Application) CalculateMetrics() {
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
 			a.Prometheus.Metrics.LineLossVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LineLoss))
+			a.Prometheus.Metrics.ACChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.ACCharging))
 		}
 
 		// Rating info
