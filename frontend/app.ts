@@ -92,6 +92,11 @@ class AxpertControl {
                     option.textContent = `Inverter ${inverter.serialno}`;
                     this.inverterSelect.appendChild(option);
                 });
+
+                // Auto-select if only one inverter is available
+                if (data.inverters.length === 1) {
+                    this.inverterSelect.value = data.inverters[0].serialno;
+                }
             } else {
                 this.inverterSelect.innerHTML = '<option value="">No inverters found</option>';
                 this.showStatus('error', 'No inverters found');
