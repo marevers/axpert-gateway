@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
@@ -40,9 +39,9 @@ type CommandHandler func(app *Application, req CommandRequest) error
 
 // Maps command names to their handler functions
 var commandHandlers = map[string]CommandHandler{
-	"setOutputPriority":   handleSetOutputPriority,
-	"setChargerPriority":  handleSetChargerPriority,
-	"setMaxChargeCurrent": handleSetMaxChargeCurrent,
+	"setOutputPriority":  handleSetOutputPriority,
+	"setChargerPriority": handleSetChargerPriority,
+	// "setMaxChargeCurrent": handleSetMaxChargeCurrent,
 }
 
 // Handles control API commands
@@ -162,19 +161,19 @@ func handleSetChargerPriority(app *Application, req CommandRequest) error {
 }
 
 // Sets the maximum AC charge current for a specific inverter
-func handleSetMaxChargeCurrent(app *Application, req CommandRequest) error {
-	log.Infof("Setting max charge current to: %s for inverter: %s", req.Value, req.SerialNo)
+// func handleSetMaxChargeCurrent(app *Application, req CommandRequest) error {
+// 	log.Infof("Setting max charge current to: %s for inverter: %s", req.Value, req.SerialNo)
 
-	// Convert string value to uint8
-	current, err := strconv.ParseUint(req.Value, 10, 8)
-	if err != nil {
-		return fmt.Errorf("invalid current value: %s", req.Value)
-	}
+// 	// Convert string value to uint8
+// 	current, err := strconv.ParseUint(req.Value, 10, 8)
+// 	if err != nil {
+// 		return fmt.Errorf("invalid current value: %s", req.Value)
+// 	}
 
-	inv, err := findInverterBySerial(app, req.SerialNo)
-	if err != nil {
-		return err
-	}
+// 	inv, err := findInverterBySerial(app, req.SerialNo)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return setMaxACChargeCurrent(inv.Connector, uint8(current))
-}
+// 	return setMaxACChargeCurrent(inv.Connector, uint8(current))
+// }

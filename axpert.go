@@ -83,13 +83,14 @@ func setChargerSourcePriority(c connector.Connector, p string) error {
 }
 
 // Sets the maximum AC charge current.
-func setMaxACChargeCurrent(c connector.Connector, cr uint8) error {
-	// TODO: Add some kind of boundaries here
+// TODO: Currently not working.
+// func setMaxACChargeCurrent(c connector.Connector, cr uint8) error {
+// 	// TODO: Add some kind of boundaries here
 
-	err := axpert.SetMaxUtilityChargingCurrent(c, cr)
-	if err != nil {
-		return err
-	}
+// 	err := axpert.SetMaxUtilityChargingCurrent(c, cr)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
