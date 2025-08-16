@@ -162,18 +162,21 @@ func (a *Application) handleGetCurrentSettings(w http.ResponseWriter, r *http.Re
 	inv, err := findInverterBySerial(a, req.SerialNo)
 	if err != nil {
 		log.Errorln(err)
-		http.Error(w, fmt.Sprintf("Inverter with serialno '%s' not found", req.SerialNo), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 
-	st, err := getCurrentSettings(inv.Connector)
-	if err != nil {
-		log.Errorln(err)
-		http.Error(w, fmt.Sprintf("Failed to retrieve settings for inverter with serialno '%s'", req.SerialNo), http.StatusInternalServerError)
+	// Use cached current settings from the inverter struct
+	if inv.CurrentSettings == nil {
+		log.Errorf("Current settings not available for %s (may not have been collected yet)", req.SerialNo)
+		http.Error(w, "Current settings not available - please wait for next metrics collection cycle", http.StatusServiceUnavailable)
+		return
 	}
 
+	settings := *inv.CurrentSettings
 	response := SettingsResponse{
 		SerialNo: inv.SerialNo,
-		Settings: st,
+		Settings: settings,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

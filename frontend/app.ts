@@ -122,7 +122,7 @@ class AxpertControl {
 
         try {
             // Fetch settings for each inverter
-            const settingsPromises = inverterSerials.map(async (serialno) => {
+            const settingsPromises = inverterSerials.map(async (serialno): Promise<SettingsResponse | null> => {
                 const request: SettingsRequest = { serialno };
                 
                 const response = await fetch('/api/settings', {
@@ -134,6 +134,11 @@ class AxpertControl {
                 });
 
                 if (!response.ok) {
+                    if (response.status === 503) {
+                        // Settings not yet available - return null to indicate this
+                        console.log(`Settings not yet available for ${serialno}, will retry on next page load`);
+                        return null;
+                    }
                     throw new Error(`Failed to fetch settings for ${serialno}: ${response.statusText}`);
                 }
 
@@ -143,9 +148,11 @@ class AxpertControl {
 
             const allSettings = await Promise.all(settingsPromises);
             
-            // Store settings in the map
+            // Store settings in the map (skip null responses for unavailable settings)
             allSettings.forEach(settingsResponse => {
-                this.currentSettings.set(settingsResponse.serialno, settingsResponse.settings);
+                if (settingsResponse !== null) {
+                    this.currentSettings.set(settingsResponse.serialno, settingsResponse.settings);
+                }
             });
 
         } catch (error) {

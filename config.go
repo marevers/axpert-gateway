@@ -9,8 +9,9 @@ type Application struct {
 }
 
 type Inverter struct {
-	Connector *connector.USBConnector
-	SerialNo  string
+	Connector       *connector.USBConnector
+	SerialNo        string
+	CurrentSettings *CurrentSettings
 }
 
 type Config struct {

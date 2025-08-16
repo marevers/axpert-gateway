@@ -40,44 +40,21 @@ type CurrentSettings struct {
 	ChargerSourcePriority string `json:"chargerSourcePriority"`
 }
 
-// Returns the current inverter settings
-func getCurrentSettings(c connector.Connector) (CurrentSettings, error) {
-	ri, err := axpert.DeviceRatingInfo(c)
-	if err != nil {
-		return CurrentSettings{}, err
+func (i *Inverter) UpdateCurrentSettings(settingName, value string) error {
+	if i.CurrentSettings == nil {
+		i.CurrentSettings = &CurrentSettings{}
 	}
 
-	var osp string
-	switch ri.OutputSourcePriority {
-	case axpert.OutputUtilityFirst:
-		osp = "utility"
-	case axpert.OutputSolarFirst:
-		osp = "solar"
-	case axpert.OutputSBUFirst:
-		osp = "sbu"
+	switch settingName {
+	case "outputSourcePriority":
+		i.CurrentSettings.OutputSourcePriority = value
+	case "chargerSourcePriority":
+		i.CurrentSettings.ChargerSourcePriority = value
 	default:
-		return CurrentSettings{}, fmt.Errorf("error: unrecognized output source priority: %s", ri.OutputSourcePriority)
+		return fmt.Errorf("unknown setting name: %s", settingName)
 	}
 
-	var csp string
-	switch ri.ChargerSourcePriority {
-	case axpert.ChargerUtilityFirst:
-		csp = "utilityfirst"
-	case axpert.ChargerSolarFirst:
-		csp = "solarfirst"
-	case axpert.ChargerSolarAndUtility:
-		csp = "solarandutility"
-	case axpert.ChargerSolarOnly:
-		csp = "solaronly"
-	default:
-		return CurrentSettings{}, fmt.Errorf("error: unrecognized charger source priority: %s", ri.ChargerSourcePriority)
-	}
-
-	return CurrentSettings{
-		OutputSourcePriority:  osp,
-		ChargerSourcePriority: csp,
-	}, nil
-
+	return nil
 }
 
 // Sets the output source priority to either 'utility', 'solar' or 'sbu'

@@ -12,6 +12,36 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// mapOutputSourcePriority converts axpert output source priority to string
+func mapOutputSourcePriority(priority axpert.OutputSourcePriority) string {
+	switch priority {
+	case axpert.OutputUtilityFirst:
+		return "utility"
+	case axpert.OutputSolarFirst:
+		return "solar"
+	case axpert.OutputSBUFirst:
+		return "sbu"
+	default:
+		return ""
+	}
+}
+
+// mapChargerSourcePriority converts axpert charger source priority to string
+func mapChargerSourcePriority(priority axpert.ChargerSourcePriority) string {
+	switch priority {
+	case axpert.ChargerUtilityFirst:
+		return "utilityfirst"
+	case axpert.ChargerSolarFirst:
+		return "solarfirst"
+	case axpert.ChargerSolarAndUtility:
+		return "solarandutility"
+	case axpert.ChargerSolarOnly:
+		return "solaronly"
+	default:
+		return ""
+	}
+}
+
 const (
 	// LabelSerialNumber represents the inverter serial number
 	LabelSerialNumber = "serialno"
@@ -386,6 +416,24 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.OutputSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.OutputSourcePriority))
 			a.Prometheus.Metrics.ChargerSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.ChargerSourcePriority))
 			a.Prometheus.Metrics.MaxACChargerCurrentVec.WithLabelValues(labelValues...).Set(float64(ri.MaxACChargingCurrent))
+
+			if osp := mapOutputSourcePriority(ri.OutputSourcePriority); osp != "" {
+				if err := inv.UpdateCurrentSettings("outputSourcePriority", osp); err != nil {
+					log.Errorf("Failed to update output source priority cache for %s: %v", inv.SerialNo, err)
+				}
+			} else {
+				log.Errorf("Unrecognized output source priority for %s: %s", inv.SerialNo, ri.OutputSourcePriority)
+			}
+
+			if csp := mapChargerSourcePriority(ri.ChargerSourcePriority); csp != "" {
+				if err := inv.UpdateCurrentSettings("chargerSourcePriority", csp); err != nil {
+					log.Errorf("Failed to update charger source priority cache for %s: %v", inv.SerialNo, err)
+				}
+			} else {
+				log.Errorf("Unrecognized charger source priority for %s: %s", inv.SerialNo, ri.ChargerSourcePriority)
+			}
+
+			log.Debugf("Updated current settings cache for device '%s'", inv.SerialNo)
 		}
 
 		// Statuses
