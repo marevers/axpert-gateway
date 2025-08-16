@@ -2,17 +2,23 @@ package main
 
 import "github.com/marevers/energia/pkg/connector"
 
+// Represents the application root
 type Application struct {
-	Config     *Config
 	Prometheus *Prometheus
 	Inverters  []*Inverter
 }
 
+// Represents an inverter
 type Inverter struct {
 	Connector       *connector.USBConnector
 	SerialNo        string
 	CurrentSettings *CurrentSettings
 }
 
-type Config struct {
+// Represents the current inverter settings
+type CurrentSettings struct {
+	OutputSourcePriority  string `json:"outputSourcePriority"`
+	ChargerSourcePriority string `json:"chargerSourcePriority"`
+	DeviceMode            string `json:"deviceMode"`
+	ChargeSource          string `json:"chargeSource"`
 }

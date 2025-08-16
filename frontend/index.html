@@ -14,6 +14,21 @@
             <p>Control your solar inverters remotely</p>
         </header>
 
+        <!-- Status Display Section -->
+        <div class="status-section" id="statusSection">
+            <h2>Current Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">Device Mode:</span>
+                    <span class="status-value" id="deviceModeValue">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Charge Source:</span>
+                    <span class="status-value" id="chargeSourceValue">-</span>
+                </div>
+            </div>
+        </div>
+
         <div class="inverter-selector">
             <label for="inverterSelect">Select Inverter:</label>
             <select id="inverterSelect">

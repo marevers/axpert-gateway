@@ -12,6 +12,35 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// mapDeviceMode converts device mode to string
+func mapDeviceMode(mode string) string {
+	switch mode {
+	case "P": // PowerOn
+		return "poweron"
+	case "S": // StandBy
+		return "standby"
+	case "L": // Utility
+		return "utitlity"
+	case "B": // Battery
+		return "battery"
+	case "F": // Fault
+		return "fault"
+	case "H": // PowerSaving
+		return "powersaving"
+	default:
+		return ""
+	}
+}
+
+// mapChargeSource converts AC charge metric to string
+func mapChargeSource(acCharge bool) string {
+	if acCharge {
+		return "utility"
+	}
+
+	return "solar"
+}
+
 // mapOutputSourcePriority converts axpert output source priority to string
 func mapOutputSourcePriority(priority axpert.OutputSourcePriority) string {
 	switch priority {
@@ -45,9 +74,6 @@ func mapChargerSourcePriority(priority axpert.ChargerSourcePriority) string {
 const (
 	// LabelSerialNumber represents the inverter serial number
 	LabelSerialNumber = "serialno"
-
-	// LabelMode represents the device mode
-	LabelDeviceMode = "devicemode"
 
 	// Namespace is the metrics prefix
 	Namespace = "axpert"
@@ -399,6 +425,14 @@ func (a *Application) CalculateMetrics() {
 			log.Debugln("parallel device information:")
 			log.Debugf("%+v", pi)
 
+			if cs := mapChargeSource(pi.ACCharging); cs != "" {
+				if err := inv.UpdateCurrentSettings("chargeSource", cs); err != nil {
+					log.Errorf("Failed to update charge source cache for %s: %v", inv.SerialNo, err)
+				}
+			} else {
+				log.Errorf("Unrecognized charge source for %s: %s", inv.SerialNo, pi.ACCharging)
+			}
+
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
 			a.Prometheus.Metrics.LineLossVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LineLoss))
 			a.Prometheus.Metrics.ACChargeOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.ACCharging))
@@ -463,12 +497,20 @@ func (a *Application) CalculateMetrics() {
 		} else {
 			log.Debugln("device mode:", md)
 
-			md, err := parseDeviceMode(md)
+			mode, err := parseDeviceMode(md)
 			if err != nil {
 				scrapeErr = true
 				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
-				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(md)
+				if dMode := mapDeviceMode(md); dMode != "" {
+					if err := inv.UpdateCurrentSettings("deviceMode", dMode); err != nil {
+						log.Errorf("Failed to update device mode cache for %s: %v", inv.SerialNo, err)
+					}
+				} else {
+					log.Errorf("Unrecognized device mode for %s: %s", inv.SerialNo, ri.OutputSourcePriority)
+				}
+
+				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(mode)
 			}
 		}
 

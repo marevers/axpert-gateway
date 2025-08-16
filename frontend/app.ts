@@ -28,6 +28,8 @@ interface SettingsRequest {
 interface CurrentSettings {
     outputSourcePriority: string;
     chargerSourcePriority: string;
+    deviceMode: string;
+    chargeSource: string;
 }
 
 interface SettingsResponse {
@@ -72,6 +74,7 @@ class AxpertControl {
         await this.loadInverters();
         await this.loadCurrentSettings();
         this.updateButtonStates();
+        this.updateStatusDisplay();
         this.setupEventListeners();
         this.startBackgroundRefresh();
     }
@@ -198,7 +201,9 @@ class AxpertControl {
         if (!settings) {
             settings = {
                 outputSourcePriority: '',
-                chargerSourcePriority: ''
+                chargerSourcePriority: '',
+                deviceMode: '',
+                chargeSource: ''
             };
         }
 
@@ -220,12 +225,48 @@ class AxpertControl {
         console.log(`Optimistically updated local cache: ${command} = ${value} for ${serialno}`);
     }
 
+    private updateStatusDisplay(): void {
+        const selectedInverter = this.inverterSelect.value;
+        const deviceModeElement = document.getElementById('deviceModeValue') as HTMLElement;
+        const chargeSourceElement = document.getElementById('chargeSourceValue') as HTMLElement;
+
+        if (!selectedInverter || !this.currentSettings.has(selectedInverter)) {
+            // No inverter selected or no settings available
+            deviceModeElement.textContent = '-';
+            chargeSourceElement.textContent = '-';
+            return;
+        }
+
+        const settings = this.currentSettings.get(selectedInverter)!;
+        
+        // Update device mode display
+        deviceModeElement.textContent = this.formatStatusValue(settings.deviceMode);
+        
+        // Update charge source display  
+        chargeSourceElement.textContent = this.formatStatusValue(settings.chargeSource);
+    }
+
+    private formatStatusValue(value: string): string {
+        if (!value || value === '') {
+            return '-';
+        }
+        
+        // Convert camelCase or snake_case to readable format
+        return value
+            .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+            .replace(/_/g, ' ') // Replace underscores with spaces
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
+
     private startBackgroundRefresh(): void {
         // Refresh settings every 60 seconds (1 minute)
         this.refreshInterval = window.setInterval(async () => {
             console.log('Background refresh: updating current settings...');
             await this.loadCurrentSettings();
             this.updateButtonStates();
+            this.updateStatusDisplay();
         }, 60000); // 60000ms = 1 minute
 
         console.log('Started background settings refresh (every 60 seconds)');
@@ -320,6 +361,7 @@ class AxpertControl {
         // Handle inverter selection change
         this.inverterSelect.addEventListener('change', () => {
             this.updateButtonStates();
+            this.updateStatusDisplay();
         });
 
         // Clean up interval when page is unloaded

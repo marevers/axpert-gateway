@@ -34,12 +34,7 @@ func initInverters() ([]*Inverter, error) {
 	return invs, nil
 }
 
-// Represents the current inverter settings
-type CurrentSettings struct {
-	OutputSourcePriority  string `json:"outputSourcePriority"`
-	ChargerSourcePriority string `json:"chargerSourcePriority"`
-}
-
+// Updates a single setting in the settings cache
 func (i *Inverter) UpdateCurrentSettings(settingName, value string) error {
 	if i.CurrentSettings == nil {
 		i.CurrentSettings = &CurrentSettings{}
@@ -50,6 +45,10 @@ func (i *Inverter) UpdateCurrentSettings(settingName, value string) error {
 		i.CurrentSettings.OutputSourcePriority = value
 	case "chargerSourcePriority":
 		i.CurrentSettings.ChargerSourcePriority = value
+	case "deviceMode":
+		i.CurrentSettings.DeviceMode = value
+	case "chargeSource":
+		i.CurrentSettings.ChargeSource = value
 	default:
 		return fmt.Errorf("unknown setting name: %s", settingName)
 	}
