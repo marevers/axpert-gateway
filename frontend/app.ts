@@ -234,25 +234,25 @@ class AxpertControl {
             });
         });
 
-        // Handle charge current button
-        const setChargeCurrentBtn = document.getElementById('setChargeCurrentBtn') as HTMLButtonElement;
-        const chargeCurrentInput = document.getElementById('chargeCurrentInput') as HTMLInputElement;
+        // Handle charge current button - TODO: Currently commented out as max charge current is not working
+        // const setChargeCurrentBtn = document.getElementById('setChargeCurrentBtn') as HTMLButtonElement;
+        // const chargeCurrentInput = document.getElementById('chargeCurrentInput') as HTMLInputElement;
 
-        setChargeCurrentBtn.addEventListener('click', () => {
-            const value = chargeCurrentInput.value.trim();
-            if (value) {
-                this.executeCommand('setMaxChargeCurrent', value);
-            } else {
-                this.showStatus('error', 'Please enter a current value');
-            }
-        });
+        // setChargeCurrentBtn.addEventListener('click', () => {
+        //     const value = chargeCurrentInput.value.trim();
+        //     if (value) {
+        //         this.executeCommand('setMaxChargeCurrent', value);
+        //     } else {
+        //         this.showStatus('error', 'Please enter a current value');
+        //     }
+        // });
 
-        // Handle Enter key in current input
-        chargeCurrentInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                setChargeCurrentBtn.click();
-            }
-        });
+        // // Handle Enter key in current input
+        // chargeCurrentInput.addEventListener('keypress', (e) => {
+        //     if (e.key === 'Enter') {
+        //         setChargeCurrentBtn.click();
+        //     }
+        // });
 
         // Handle inverter selection change
         this.inverterSelect.addEventListener('change', () => {
