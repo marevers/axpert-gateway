@@ -21,6 +21,20 @@ interface CommandResponse {
     message: string;
 }
 
+interface SettingsRequest {
+    serialno: string;
+}
+
+interface CurrentSettings {
+    outputSourcePriority: string;
+    chargerSourcePriority: string;
+}
+
+interface SettingsResponse {
+    serialno: string;
+    settings: CurrentSettings;
+}
+
 class AxpertControl {
     private inverterSelect: HTMLSelectElement;
     private statusDisplay: HTMLElement;
@@ -32,6 +46,7 @@ class AxpertControl {
     private modalValue: HTMLElement;
     private modalCancel: HTMLButtonElement;
     private modalConfirm: HTMLButtonElement;
+    private currentSettings: Map<string, CurrentSettings> = new Map();
 
     constructor() {
         this.inverterSelect = document.getElementById('inverterSelect') as HTMLSelectElement;
@@ -52,6 +67,8 @@ class AxpertControl {
 
     private async init(): Promise<void> {
         await this.loadInverters();
+        await this.loadCurrentSettings();
+        this.updateButtonStates();
         this.setupEventListeners();
     }
 
@@ -87,6 +104,122 @@ class AxpertControl {
         }
     }
 
+    private async loadCurrentSettings(): Promise<void> {
+        // Get all inverter serial numbers from the dropdown options
+        const options = Array.from(this.inverterSelect.options);
+        const inverterSerials = options
+            .filter(option => option.value && option.value !== '')
+            .map(option => option.value);
+
+        if (inverterSerials.length === 0) {
+            return; // No inverters to load settings for
+        }
+
+        try {
+            // Fetch settings for each inverter
+            const settingsPromises = inverterSerials.map(async (serialno) => {
+                const request: SettingsRequest = { serialno };
+                
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch settings for ${serialno}: ${response.statusText}`);
+                }
+
+                const result: SettingsResponse = await response.json();
+                return result;
+            });
+
+            const allSettings = await Promise.all(settingsPromises);
+            
+            // Store settings in the map
+            allSettings.forEach(settingsResponse => {
+                this.currentSettings.set(settingsResponse.serialno, settingsResponse.settings);
+            });
+
+        } catch (error) {
+            console.error('Failed to load current settings:', error);
+            this.showStatus('error', 'Failed to load current settings');
+        }
+    }
+
+    private async refreshInverterSettings(serialno: string): Promise<void> {
+        try {
+            const request: SettingsRequest = { serialno };
+            
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(request)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to refresh settings for ${serialno}: ${response.statusText}`);
+            }
+
+            const result: SettingsResponse = await response.json();
+            
+            // Update the settings in our map
+            this.currentSettings.set(result.serialno, result.settings);
+
+        } catch (error) {
+            console.error(`Failed to refresh settings for ${serialno}:`, error);
+            // Don't show error status here as it might interfere with success message
+        }
+    }
+
+    private updateButtonStates(): void {
+        const selectedInverter = this.inverterSelect.value;
+        
+        if (!selectedInverter || !this.currentSettings.has(selectedInverter)) {
+            // Reset all buttons to default state if no inverter selected or no settings
+            document.querySelectorAll('.control-btn[data-command]').forEach(button => {
+                const btn = button as HTMLButtonElement;
+                btn.classList.remove('current-setting');
+                btn.disabled = false;
+            });
+            return;
+        }
+
+        const settings = this.currentSettings.get(selectedInverter)!;
+
+        // Update output priority buttons
+        document.querySelectorAll('.control-btn[data-command="setOutputPriority"]').forEach(button => {
+            const btn = button as HTMLButtonElement;
+            const value = btn.dataset.value;
+            
+            if (value === settings.outputSourcePriority) {
+                btn.classList.add('current-setting');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('current-setting');
+                btn.disabled = false;
+            }
+        });
+
+        // Update charger priority buttons
+        document.querySelectorAll('.control-btn[data-command="setChargerPriority"]').forEach(button => {
+            const btn = button as HTMLButtonElement;
+            const value = btn.dataset.value;
+            
+            if (value === settings.chargerSourcePriority) {
+                btn.classList.add('current-setting');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('current-setting');
+                btn.disabled = false;
+            }
+        });
+    }
+
     private setupEventListeners(): void {
         // Handle control button clicks
         document.querySelectorAll('.control-btn[data-command]').forEach(button => {
@@ -119,6 +252,11 @@ class AxpertControl {
             if (e.key === 'Enter') {
                 setChargeCurrentBtn.click();
             }
+        });
+
+        // Handle inverter selection change
+        this.inverterSelect.addEventListener('change', () => {
+            this.updateButtonStates();
         });
     }
 
@@ -160,6 +298,10 @@ class AxpertControl {
 
             if (response.ok && result.status === 'success') {
                 this.showStatus('success', `✅ ${this.getCommandDisplayName(command)}: ${this.getValueDisplayName(command, value)}`);
+                
+                // Refresh current settings for the affected inverter
+                await this.refreshInverterSettings(selectedInverter);
+                this.updateButtonStates();
             } else {
                 this.showStatus('error', `❌ ${result.message || 'Command failed'}`);
             }

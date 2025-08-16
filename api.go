@@ -15,6 +15,17 @@ type CommandRequest struct {
 	SerialNo string `json:"serialno"`
 }
 
+// Represents the JSON body for settings requests
+type SettingsRequest struct {
+	SerialNo string `json:"serialno"`
+}
+
+// Represents the JSON body for settings responses
+type SettingsResponse struct {
+	SerialNo string          `json:"serialno"`
+	Settings CurrentSettings `json:"settings"`
+}
+
 // Represents the JSON response for control API commands
 type CommandResponse struct {
 	Command string `json:"command"`
@@ -131,6 +142,41 @@ func (a *Application) handleListInverters(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Errorf("Failed to encode inverters response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+// Handles retrieving current settings for an inverter
+func (a *Application) handleGetCurrentSettings(w http.ResponseWriter, r *http.Request) {
+	// Parse JSON body
+	var req SettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Errorf("Failed to decode request body: %v", err)
+		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	inv, err := findInverterBySerial(a, req.SerialNo)
+	if err != nil {
+		log.Errorln(err)
+		http.Error(w, fmt.Sprintf("Inverter with serialno '%s' not found", req.SerialNo), http.StatusBadRequest)
+	}
+
+	st, err := getCurrentSettings(inv.Connector)
+	if err != nil {
+		log.Errorln(err)
+		http.Error(w, fmt.Sprintf("Failed to retrieve settings for inverter with serialno '%s'", req.SerialNo), http.StatusInternalServerError)
+	}
+
+	response := SettingsResponse{
+		SerialNo: inv.SerialNo,
+		Settings: st,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Errorf("Failed to encode settings response: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}

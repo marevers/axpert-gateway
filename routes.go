@@ -18,6 +18,7 @@ func (a *Application) Routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
 	router.HandlerFunc(http.MethodPost, "/api/command/:command", a.handleCommand)
 	router.HandlerFunc(http.MethodGet, "/api/inverters", a.handleListInverters)
+	router.HandlerFunc(http.MethodPost, "/api/settings", a.handleGetCurrentSettings)
 	router.ServeFiles("/control/*filepath", http.Dir("frontend/"))
 
 	router.HandlerFunc(http.MethodGet, "/", func(w http.ResponseWriter, r *http.Request) {

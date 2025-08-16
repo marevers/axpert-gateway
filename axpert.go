@@ -8,7 +8,7 @@ import (
 	"github.com/marevers/energia/pkg/connector"
 )
 
-// Initialise any inverters connected through USB and return them.
+// Initialise any inverters connected through USB and return them
 func initInverters() ([]*Inverter, error) {
 	var invs []*Inverter
 
@@ -34,7 +34,53 @@ func initInverters() ([]*Inverter, error) {
 	return invs, nil
 }
 
-// Sets the output source priority to either 'utility', 'solar' or 'sbu'.
+// Represents the current inverter settings
+type CurrentSettings struct {
+	OutputSourcePriority  string `json:"outputSourcePriority"`
+	ChargerSourcePriority string `json:"chargerSourcePriority"`
+}
+
+// Returns the current inverter settings
+func getCurrentSettings(c connector.Connector) (CurrentSettings, error) {
+	ri, err := axpert.DeviceRatingInfo(c)
+	if err != nil {
+		return CurrentSettings{}, err
+	}
+
+	var osp string
+	switch ri.OutputSourcePriority {
+	case axpert.OutputUtilityFirst:
+		osp = "utility"
+	case axpert.OutputSolarFirst:
+		osp = "solar"
+	case axpert.OutputSBUFirst:
+		osp = "sbu"
+	default:
+		return CurrentSettings{}, fmt.Errorf("error: unrecognized output source priority: %s", ri.OutputSourcePriority)
+	}
+
+	var csp string
+	switch ri.ChargerSourcePriority {
+	case axpert.ChargerUtilityFirst:
+		csp = "utilityfirst"
+	case axpert.ChargerSolarFirst:
+		csp = "solarfirst"
+	case axpert.ChargerSolarAndUtility:
+		csp = "solarandutility"
+	case axpert.ChargerSolarOnly:
+		csp = "solaronly"
+	default:
+		return CurrentSettings{}, fmt.Errorf("error: unrecognized charger source priority: %s", ri.ChargerSourcePriority)
+	}
+
+	return CurrentSettings{
+		OutputSourcePriority:  osp,
+		ChargerSourcePriority: csp,
+	}, nil
+
+}
+
+// Sets the output source priority to either 'utility', 'solar' or 'sbu'
 func setOutputSourcePriority(c connector.Connector, p string) error {
 	var osp axpert.OutputSourcePriority
 
@@ -57,7 +103,7 @@ func setOutputSourcePriority(c connector.Connector, p string) error {
 	return nil
 }
 
-// Sets the charger source priority to either 'utilityfirst', 'solarfirst', 'solarandutility' or 'solar only'.
+// Sets the charger source priority to either 'utilityfirst', 'solarfirst', 'solarandutility' or 'solar only'
 func setChargerSourcePriority(c connector.Connector, p string) error {
 	var csp axpert.ChargerSourcePriority
 

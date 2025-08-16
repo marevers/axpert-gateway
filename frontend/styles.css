@@ -147,6 +147,30 @@ header p {
     transform: none;
 }
 
+.control-btn.current-setting {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+    position: relative;
+}
+
+.control-btn.current-setting:hover {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+    transform: none;
+    cursor: not-allowed;
+}
+
+.control-btn.current-setting::after {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
 /* Input Group */
 .input-group {
     display: flex;
