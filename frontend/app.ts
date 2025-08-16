@@ -192,6 +192,34 @@ class AxpertControl {
         }
     }
 
+    private updateLocalSettings(serialno: string, command: string, value: string): void {
+        // Get or create settings for this inverter
+        let settings = this.currentSettings.get(serialno);
+        if (!settings) {
+            settings = {
+                outputSourcePriority: '',
+                chargerSourcePriority: ''
+            };
+        }
+
+        // Update the appropriate setting based on the command
+        switch (command) {
+            case 'setOutputPriority':
+                settings.outputSourcePriority = value;
+                break;
+            case 'setChargerPriority':
+                settings.chargerSourcePriority = value;
+                break;
+            default:
+                console.warn(`Unknown command for local settings update: ${command}`);
+                return;
+        }
+
+        // Update the cache
+        this.currentSettings.set(serialno, settings);
+        console.log(`Optimistically updated local cache: ${command} = ${value} for ${serialno}`);
+    }
+
     private startBackgroundRefresh(): void {
         // Refresh settings every 60 seconds (1 minute)
         this.refreshInterval = window.setInterval(async () => {
@@ -338,9 +366,7 @@ class AxpertControl {
 
             if (response.ok && result.status === 'success') {
                 this.showStatus('success', `${this.getCommandDisplayName(command)}: ${this.getValueDisplayName(command, value)}`);
-                
-                // Refresh current settings for the affected inverter
-                await this.refreshInverterSettings(selectedInverter);
+                this.updateLocalSettings(selectedInverter, command, value);
                 this.updateButtonStates();
             } else {
                 this.showStatus('error', `${result.message || 'Command failed'}`);
