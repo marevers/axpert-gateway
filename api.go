@@ -157,6 +157,8 @@ func (a *Application) handleGetCurrentSettings(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	log.Infof("Retrieving current settings for inverter with serialno '%s'", req.SerialNo)
+
 	inv, err := findInverterBySerial(a, req.SerialNo)
 	if err != nil {
 		log.Errorln(err)

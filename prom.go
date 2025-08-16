@@ -318,6 +318,8 @@ func (a *Application) CalculateMetrics() {
 	scrapeErr := false
 
 	for _, inv := range a.Inverters {
+		log.Infof("Starting metrics retrieval from device with serialno '%s'", inv.SerialNo)
+
 		var labelValues []string
 
 		labelValues = append(
@@ -433,7 +435,7 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.OutputModeVec.WithLabelValues(labelValues...).Set(float64(om))
 		}
 
-		log.Infof("Retrieved metrics from device with serialno '%s'", inv.SerialNo)
+		log.Infof("Finished metrics retrieval from device with serialno '%s'", inv.SerialNo)
 	}
 
 	if scrapeErr {
