@@ -297,18 +297,18 @@ class AxpertControl {
             const result: CommandResponse = await response.json();
 
             if (response.ok && result.status === 'success') {
-                this.showStatus('success', `✅ ${this.getCommandDisplayName(command)}: ${this.getValueDisplayName(command, value)}`);
+                this.showStatus('success', `${this.getCommandDisplayName(command)}: ${this.getValueDisplayName(command, value)}`);
                 
                 // Refresh current settings for the affected inverter
                 await this.refreshInverterSettings(selectedInverter);
                 this.updateButtonStates();
             } else {
-                this.showStatus('error', `❌ ${result.message || 'Command failed'}`);
+                this.showStatus('error', `${result.message || 'Command failed'}`);
             }
 
         } catch (error) {
             console.error('Command execution failed:', error);
-            this.showStatus('error', '❌ Network error - please try again');
+            this.showStatus('error', 'Network error - please try again');
         } finally {
             this.setLoading(false);
         }
