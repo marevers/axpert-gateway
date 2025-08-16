@@ -46,10 +46,13 @@ class AxpertControl {
     private modalValue: HTMLElement;
     private modalCancel: HTMLButtonElement;
     private modalConfirm: HTMLButtonElement;
-    private currentSettings: Map<string, CurrentSettings> = new Map();
+    private currentSettings: Map<string, CurrentSettings>;
+    private refreshInterval: number | null = null;
 
     constructor() {
         this.inverterSelect = document.getElementById('inverterSelect') as HTMLSelectElement;
+        this.currentSettings = new Map();
+
         this.statusDisplay = document.getElementById('statusDisplay') as HTMLElement;
         this.statusIcon = this.statusDisplay.querySelector('.status-icon') as HTMLElement;
         this.statusMessage = this.statusDisplay.querySelector('.status-message') as HTMLElement;
@@ -70,6 +73,7 @@ class AxpertControl {
         await this.loadCurrentSettings();
         this.updateButtonStates();
         this.setupEventListeners();
+        this.startBackgroundRefresh();
     }
 
     private async loadInverters(): Promise<void> {
@@ -188,6 +192,25 @@ class AxpertControl {
         }
     }
 
+    private startBackgroundRefresh(): void {
+        // Refresh settings every 60 seconds (1 minute)
+        this.refreshInterval = window.setInterval(async () => {
+            console.log('Background refresh: updating current settings...');
+            await this.loadCurrentSettings();
+            this.updateButtonStates();
+        }, 60000); // 60000ms = 1 minute
+
+        console.log('Started background settings refresh (every 60 seconds)');
+    }
+
+    private stopBackgroundRefresh(): void {
+        if (this.refreshInterval !== null) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+            console.log('Stopped background settings refresh');
+        }
+    }
+
     private updateButtonStates(): void {
         const selectedInverter = this.inverterSelect.value;
         
@@ -269,6 +292,11 @@ class AxpertControl {
         // Handle inverter selection change
         this.inverterSelect.addEventListener('change', () => {
             this.updateButtonStates();
+        });
+
+        // Clean up interval when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            this.stopBackgroundRefresh();
         });
     }
 
