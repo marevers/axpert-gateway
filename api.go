@@ -192,24 +192,30 @@ func (a *Application) handleGetCurrentSettings(w http.ResponseWriter, r *http.Re
 
 // Sets the output source priority for a specific inverter
 func handleSetOutputPriority(app *Application, req CommandRequest) error {
-	log.Infof("Setting output priority to: %s for inverter: %s", req.Value, req.SerialNo)
+	log.Infof("Setting output source priority to: %s for inverter: %s", req.Value, req.SerialNo)
 
 	inv, err := findInverterBySerial(app, req.SerialNo)
 	if err != nil {
 		return err
 	}
+
+	inv.mu.Lock()
+	defer inv.mu.Unlock()
 
 	return setOutputSourcePriority(inv.Connector, req.Value)
 }
 
 // Sets the charger source priority for a specific inverter
 func handleSetChargerPriority(app *Application, req CommandRequest) error {
-	log.Infof("Setting charger priority to: %s for inverter: %s", req.Value, req.SerialNo)
+	log.Infof("Setting charger source priority to: %s for inverter: %s", req.Value, req.SerialNo)
 
 	inv, err := findInverterBySerial(app, req.SerialNo)
 	if err != nil {
 		return err
 	}
+
+	inv.mu.Lock()
+	defer inv.mu.Unlock()
 
 	return setChargerSourcePriority(inv.Connector, req.Value)
 }
@@ -228,6 +234,9 @@ func handleSetBatteryRechgVoltage(app *Application, req CommandRequest) error {
 		return err
 	}
 
+	inv.mu.Lock()
+	defer inv.mu.Unlock()
+
 	return setBatteryRechargeVoltage(inv.Connector, inv.CurrentSettings, float32(f))
 }
 
@@ -244,6 +253,9 @@ func handleSetBatteryRedischgVoltage(app *Application, req CommandRequest) error
 	if err != nil {
 		return err
 	}
+
+	inv.mu.Lock()
+	defer inv.mu.Unlock()
 
 	return setBatteryRedischargeVoltage(inv.Connector, inv.CurrentSettings, float32(f))
 }

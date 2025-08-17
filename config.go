@@ -1,6 +1,10 @@
 package main
 
-import "github.com/marevers/energia/pkg/connector"
+import (
+	"sync"
+
+	"github.com/marevers/energia/pkg/connector"
+)
 
 // Represents the application root
 type Application struct {
@@ -13,6 +17,7 @@ type Inverter struct {
 	Connector       *connector.USBConnector
 	SerialNo        string
 	CurrentSettings *CurrentSettings
+	mu              sync.Mutex
 }
 
 // Represents the current inverter settings

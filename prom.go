@@ -404,6 +404,9 @@ func (a *Application) CalculateMetrics() {
 	for _, inv := range a.Inverters {
 		log.Infof("Starting metrics retrieval from device with serialno '%s'", inv.SerialNo)
 
+		inv.mu.Lock()
+		defer inv.mu.Unlock()
+
 		var labelValues []string
 
 		labelValues = append(
