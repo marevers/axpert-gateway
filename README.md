@@ -123,7 +123,6 @@ Access the web interface at: `http://localhost:8080/control/`
 **Features:**
 - **Output Priority Control** - Set utility/solar/SBU priority with one click
 - **Charger Priority Control** - Configure charging source preferences
-- **Max Charge Current** - Set AC charging current limits (1-100A)
 
 ### Control API Endpoints
 
@@ -159,7 +158,8 @@ Content-Type: application/json
 **Available Commands:**
 - `setOutputPriority` - Values: `utility`, `solar`, `sbu`
 - `setChargerPriority` - Values: `utilityfirst`, `solarfirst`, `solarandutility`, `solaronly`
-- `setMaxChargeCurrent` - Values: `1-100` (amperes)
+- `setBatteryRechgVoltage` - Values: whole numbers between `44` and `51`
+- `setBatteryRedischgVoltage` - Values: whole numbers between `48` and `58`
 
 **Response:**
 ```json

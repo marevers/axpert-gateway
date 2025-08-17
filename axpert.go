@@ -34,23 +34,42 @@ func initInverters() ([]*Inverter, error) {
 	return invs, nil
 }
 
-// Updates a single setting in the settings cache
-func (i *Inverter) UpdateCurrentSettings(settingName, value string) error {
+// Takes an input and updates all relevant current settings using the contents of the input
+func (i *Inverter) UpdateCurrentSettings(input any) error {
 	if i.CurrentSettings == nil {
 		i.CurrentSettings = &CurrentSettings{}
 	}
 
-	switch settingName {
-	case "outputSourcePriority":
-		i.CurrentSettings.OutputSourcePriority = value
-	case "chargerSourcePriority":
-		i.CurrentSettings.ChargerSourcePriority = value
-	case "deviceMode":
-		i.CurrentSettings.DeviceMode = value
-	case "chargeSource":
-		i.CurrentSettings.ChargeSource = value
+	switch inp := input.(type) {
+	case *axpert.ParallelInfo:
+		if cs := mapChargeSource(inp.ACCharging); cs != "" {
+			i.CurrentSettings.ChargeSource = cs
+		} else {
+			return fmt.Errorf("Unrecognized charge source: %s", inp.ACCharging)
+		}
+	case *axpert.RatingInfo:
+		if osp := mapOutputSourcePriority(inp.OutputSourcePriority); osp != "" {
+			i.CurrentSettings.OutputSourcePriority = osp
+		} else {
+			return fmt.Errorf("Unrecognized output source priority: %s", inp.OutputSourcePriority)
+		}
+
+		if csp := mapChargerSourcePriority(inp.ChargerSourcePriority); csp != "" {
+			i.CurrentSettings.ChargerSourcePriority = csp
+		} else {
+			return fmt.Errorf("Unrecognized charger source priority: %s", inp.ChargerSourcePriority)
+		}
+
+		i.CurrentSettings.BatteryRechargeVoltage = inp.BatteryRechargeVoltage
+		i.CurrentSettings.BatteryRedischargeVoltage = inp.BatteryRedischargeVoltage
+	case string:
+		if dMode := mapDeviceMode(inp); dMode != "" {
+			i.CurrentSettings.DeviceMode = dMode
+		} else {
+			return fmt.Errorf("Unrecognized device mode: %s", inp)
+		}
 	default:
-		return fmt.Errorf("unknown setting name: %s", settingName)
+		return fmt.Errorf("unknown input type: %T", inp)
 	}
 
 	return nil
@@ -104,6 +123,46 @@ func setChargerSourcePriority(c connector.Connector, p string) error {
 	return nil
 }
 
+// Sets the battery recharge voltage to a valid whole number (between 44 and 51 V).
+func setBatteryRechargeVoltage(c connector.Connector, cs *CurrentSettings, v float32) error {
+	switch {
+	case (v < 44 || v > 51) || !isWhole(v): // Invalid value
+		return fmt.Errorf("error: battery recharge voltage must be a whole number between 44 and 51 V")
+	case v > cs.BatteryRedischargeVoltage: // Exceeds the redischarge voltage
+		return fmt.Errorf("error: battery recharge voltage may not exceed redischarge voltage")
+	case v > cs.BatteryFloatVoltage: // Exceeds the float voltage
+		return fmt.Errorf("error: battery recharge voltage may not exceed float voltage")
+	case v < cs.BatteryCutoffVoltage: // Lower than cutoff voltage
+		return fmt.Errorf("error: battery recharge voltage may not be lower than cutoff voltage")
+	}
+
+	if err := axpert.SetBatteryRechargeVoltage(c, v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Sets the battery redischarge voltage to a valid whole number (between 48 and 58 V).
+func setBatteryRedischargeVoltage(c connector.Connector, cs *CurrentSettings, v float32) error {
+	switch {
+	case (v < 48 || v > 58) || !isWhole(v): // Invalid value
+		return fmt.Errorf("error: battery redischarge voltage must be a whole number between 48 and 58 V")
+	case v < cs.BatteryRechargeVoltage: // Lower than redischarge voltage
+		return fmt.Errorf("error: battery redischarge voltage may not be lower than recharge voltage")
+	case v > cs.BatteryFloatVoltage: // Exceeds the float voltage
+		return fmt.Errorf("error: battery redischarge voltage may not exceed float voltage")
+	case v < cs.BatteryCutoffVoltage: // Lower than cutoff voltage
+		return fmt.Errorf("error: battery redischarge voltage may not be lower than cutoff voltage")
+	}
+
+	if err := axpert.SetBatteryRedischargeVoltage(c, v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Sets the maximum AC charge current.
 // TODO: Currently not working.
 // func setMaxACChargeCurrent(c connector.Connector, cr uint8) error {
@@ -116,3 +175,8 @@ func setChargerSourcePriority(c connector.Connector, p string) error {
 
 // 	return nil
 // }
+
+// Returns true if f is a whole number.
+func isWhole(f float32) bool {
+	return f == float32(int(f))
+}

@@ -453,12 +453,8 @@ func (a *Application) CalculateMetrics() {
 			log.Debugln("parallel device information:")
 			log.Debugf("%+v", pi)
 
-			if cs := mapChargeSource(pi.ACCharging); cs != "" {
-				if err := inv.UpdateCurrentSettings("chargeSource", cs); err != nil {
-					log.Errorf("Failed to update charge source cache for %s: %v", inv.SerialNo, err)
-				}
-			} else {
-				log.Errorf("Unrecognized charge source for %s: %s", inv.SerialNo, pi.ACCharging)
+			if err := inv.UpdateCurrentSettings(pi); err != nil {
+				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
 			}
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
@@ -483,23 +479,9 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.BatteryUnderVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryUnderVoltage))
 			a.Prometheus.Metrics.BatteryFloatVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryFloatVoltage))
 
-			if osp := mapOutputSourcePriority(ri.OutputSourcePriority); osp != "" {
-				if err := inv.UpdateCurrentSettings("outputSourcePriority", osp); err != nil {
-					log.Errorf("Failed to update output source priority cache for %s: %v", inv.SerialNo, err)
-				}
-			} else {
-				log.Errorf("Unrecognized output source priority for %s: %s", inv.SerialNo, ri.OutputSourcePriority)
+			if err := inv.UpdateCurrentSettings(ri); err != nil {
+				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
 			}
-
-			if csp := mapChargerSourcePriority(ri.ChargerSourcePriority); csp != "" {
-				if err := inv.UpdateCurrentSettings("chargerSourcePriority", csp); err != nil {
-					log.Errorf("Failed to update charger source priority cache for %s: %v", inv.SerialNo, err)
-				}
-			} else {
-				log.Errorf("Unrecognized charger source priority for %s: %s", inv.SerialNo, ri.ChargerSourcePriority)
-			}
-
-			log.Debugf("Updated current settings cache for device '%s'", inv.SerialNo)
 		}
 
 		// Statuses
@@ -534,12 +516,8 @@ func (a *Application) CalculateMetrics() {
 				scrapeErr = true
 				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
-				if dMode := mapDeviceMode(md); dMode != "" {
-					if err := inv.UpdateCurrentSettings("deviceMode", dMode); err != nil {
-						log.Errorf("Failed to update device mode cache for %s: %v", inv.SerialNo, err)
-					}
-				} else {
-					log.Errorf("Unrecognized device mode for %s: %s", inv.SerialNo, ri.OutputSourcePriority)
+				if err := inv.UpdateCurrentSettings(md); err != nil {
+					log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
 				}
 
 				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(mode)

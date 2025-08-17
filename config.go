@@ -17,8 +17,12 @@ type Inverter struct {
 
 // Represents the current inverter settings
 type CurrentSettings struct {
-	OutputSourcePriority  string `json:"outputSourcePriority"`
-	ChargerSourcePriority string `json:"chargerSourcePriority"`
-	DeviceMode            string `json:"deviceMode"`
-	ChargeSource          string `json:"chargeSource"`
+	OutputSourcePriority      string  `json:"outputSourcePriority"`
+	ChargerSourcePriority     string  `json:"chargerSourcePriority"`
+	DeviceMode                string  `json:"deviceMode"`
+	ChargeSource              string  `json:"chargeSource"`
+	BatteryRechargeVoltage    float32 `json:"batteryRechargeVoltage"`
+	BatteryRedischargeVoltage float32 `json:"batteryRedischargeVoltage"`
+	BatteryCutoffVoltage      float32 `json:"batteryCutoffVoltage"`
+	BatteryFloatVoltage       float32 `json:"batteryFloatVoltage"`
 }

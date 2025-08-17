@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
@@ -50,8 +51,10 @@ type CommandHandler func(app *Application, req CommandRequest) error
 
 // Maps command names to their handler functions
 var commandHandlers = map[string]CommandHandler{
-	"setOutputPriority":  handleSetOutputPriority,
-	"setChargerPriority": handleSetChargerPriority,
+	"setOutputPriority":         handleSetOutputPriority,
+	"setChargerPriority":        handleSetChargerPriority,
+	"setBatteryRechgVoltage":    handleSetBatteryRechgVoltage,
+	"setBatteryRedischgVoltage": handleSetBatteryRedischgVoltage,
 	// "setMaxChargeCurrent": handleSetMaxChargeCurrent,
 }
 
@@ -209,6 +212,40 @@ func handleSetChargerPriority(app *Application, req CommandRequest) error {
 	}
 
 	return setChargerSourcePriority(inv.Connector, req.Value)
+}
+
+// Sets the battery recharge voltage for  specific inverter
+func handleSetBatteryRechgVoltage(app *Application, req CommandRequest) error {
+	log.Infof("Setting battery recharge voltage to: %s for inverter: %s", req.Value, req.SerialNo)
+
+	inv, err := findInverterBySerial(app, req.SerialNo)
+	if err != nil {
+		return err
+	}
+
+	f, err := strconv.ParseFloat(req.Value, 32)
+	if err != nil {
+		return err
+	}
+
+	return setBatteryRechargeVoltage(inv.Connector, inv.CurrentSettings, float32(f))
+}
+
+// Sets the battery recharge voltage for  specific inverter
+func handleSetBatteryRedischgVoltage(app *Application, req CommandRequest) error {
+	log.Infof("Setting battery redischarge voltage to: %s for inverter: %s", req.Value, req.SerialNo)
+
+	inv, err := findInverterBySerial(app, req.SerialNo)
+	if err != nil {
+		return err
+	}
+
+	f, err := strconv.ParseFloat(req.Value, 32)
+	if err != nil {
+		return err
+	}
+
+	return setBatteryRedischargeVoltage(inv.Connector, inv.CurrentSettings, float32(f))
 }
 
 // Sets the maximum AC charge current for a specific inverter
