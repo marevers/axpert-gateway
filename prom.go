@@ -129,6 +129,8 @@ type Prometheus struct {
 		MaxACChargerCurrentVec    *prometheus.GaugeVec
 		BatteryRechgVoltageVec    *prometheus.GaugeVec
 		BatteryRedischgVoltageVec *prometheus.GaugeVec
+		BatteryUnderVoltageVec    *prometheus.GaugeVec
+		BatteryFloatVoltageVec    *prometheus.GaugeVec
 
 		// Statuses
 		OverloadVec *prometheus.GaugeVec
@@ -342,6 +344,18 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Battery redischarge voltage",
 	}, labels)
 
+	p.Metrics.BatteryUnderVoltageVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "battery_cutoff_voltage",
+		Namespace: Namespace,
+		Help:      "Battery under / cutoff voltage",
+	}, labels)
+
+	p.Metrics.BatteryFloatVoltageVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "battery_float_voltage",
+		Namespace: Namespace,
+		Help:      "Battery float voltage",
+	}, labels)
+
 	// Statuses
 
 	p.Metrics.OverloadVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
@@ -466,6 +480,8 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.MaxACChargerCurrentVec.WithLabelValues(labelValues...).Set(float64(ri.MaxACChargingCurrent))
 			a.Prometheus.Metrics.BatteryRechgVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryRechargeVoltage))
 			a.Prometheus.Metrics.BatteryRedischgVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryRedischargeVoltage))
+			a.Prometheus.Metrics.BatteryUnderVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryUnderVoltage))
+			a.Prometheus.Metrics.BatteryFloatVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryFloatVoltage))
 
 			if osp := mapOutputSourcePriority(ri.OutputSourcePriority); osp != "" {
 				if err := inv.UpdateCurrentSettings("outputSourcePriority", osp); err != nil {
