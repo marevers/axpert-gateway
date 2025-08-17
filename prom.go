@@ -20,7 +20,7 @@ func mapDeviceMode(mode string) string {
 	case "S": // StandBy
 		return "standby"
 	case "L": // Utility
-		return "utitlity"
+		return "utility"
 	case "B": // Battery
 		return "battery"
 	case "F": // Fault
@@ -124,9 +124,11 @@ type Prometheus struct {
 		ACChargeOnVec *prometheus.GaugeVec
 
 		// Rating information
-		OutputSourcePrioVec    *prometheus.GaugeVec
-		ChargerSourcePrioVec   *prometheus.GaugeVec
-		MaxACChargerCurrentVec *prometheus.GaugeVec
+		OutputSourcePrioVec       *prometheus.GaugeVec
+		ChargerSourcePrioVec      *prometheus.GaugeVec
+		MaxACChargerCurrentVec    *prometheus.GaugeVec
+		BatteryRechgVoltageVec    *prometheus.GaugeVec
+		BatteryRedischgVoltageVec *prometheus.GaugeVec
 
 		// Statuses
 		OverloadVec *prometheus.GaugeVec
@@ -328,6 +330,18 @@ func (p *Prometheus) RegisterMetrics() {
 		Help:      "Max AC charging current in amps",
 	}, labels)
 
+	p.Metrics.BatteryRechgVoltageVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "battery_recharge_voltage",
+		Namespace: Namespace,
+		Help:      "Battery recharge voltage",
+	}, labels)
+
+	p.Metrics.BatteryRedischgVoltageVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "battery_redischarge_voltage",
+		Namespace: Namespace,
+		Help:      "Battery redischarge voltage",
+	}, labels)
+
 	// Statuses
 
 	p.Metrics.OverloadVec = promauto.With(p.Reg).NewGaugeVec(prometheus.GaugeOpts{
@@ -450,6 +464,8 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.OutputSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.OutputSourcePriority))
 			a.Prometheus.Metrics.ChargerSourcePrioVec.WithLabelValues(labelValues...).Set(float64(ri.ChargerSourcePriority))
 			a.Prometheus.Metrics.MaxACChargerCurrentVec.WithLabelValues(labelValues...).Set(float64(ri.MaxACChargingCurrent))
+			a.Prometheus.Metrics.BatteryRechgVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryRechargeVoltage))
+			a.Prometheus.Metrics.BatteryRedischgVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryRedischargeVoltage))
 
 			if osp := mapOutputSourcePriority(ri.OutputSourcePriority); osp != "" {
 				if err := inv.UpdateCurrentSettings("outputSourcePriority", osp); err != nil {
