@@ -62,6 +62,8 @@ func (i *Inverter) UpdateCurrentSettings(input any) error {
 
 		i.CurrentSettings.BatteryRechargeVoltage = inp.BatteryRechargeVoltage
 		i.CurrentSettings.BatteryRedischargeVoltage = inp.BatteryRedischargeVoltage
+		i.CurrentSettings.BatteryCutoffVoltage = inp.BatteryUnderVoltage
+		i.CurrentSettings.BatteryFloatVoltage = inp.BatteryFloatVoltage
 	case string:
 		if dMode := mapDeviceMode(inp); dMode != "" {
 			i.CurrentSettings.DeviceMode = dMode
