@@ -111,6 +111,7 @@ The application supports the following command-line flags:
 - **`/control/`** - Web-based control interface (when control API is enabled)
 - **`/api/inverters`** - List available inverters (JSON API)
 - **`/api/command/:command`** - Execute inverter commands (JSON API)
+- **`/api/settings`** - Get current inverter settings (JSON API)
 
 ## Control API & Web Interface
 
@@ -121,8 +122,10 @@ The gateway includes a control API and web interface for managing your Axpert in
 Access the web interface at: `http://localhost:8080/control/`
 
 **Features:**
-- **Output Priority Control** - Set utility/solar/SBU priority with one click
-- **Charger Priority Control** - Configure charging source preferences
+- **Real-time Settings Display** - View current inverter configuration and status
+- **Multi-inverter Support** - Switch between multiple connected inverters
+- **Output Priority Control** - Set output priority
+- **Charger Priority Control** - Set charger priority
 
 ### Control API Endpoints
 
@@ -141,6 +144,33 @@ GET /api/inverters
     {"serialno": "12456789000000"}
   ],
   "count": 2
+}
+```
+
+#### Get Current Settings
+```bash
+POST /api/settings
+Content-Type: application/json
+
+{
+  "serialno": "12456789000000"
+}
+```
+
+**Response:**
+```json
+{
+  "serialno": "12456789000000",
+  "settings": {
+    "outputSourcePriority": "solar",
+    "chargerSourcePriority": "solarfirst",
+    "deviceMode": "inverter",
+    "chargeSource": "solar",
+    "batteryRechargeVoltage": 48.0,
+    "batteryRedischargeVoltage": 50.0,
+    "batteryCutoffVoltage": 44.0,
+    "batteryFloatVoltage": 54.0
+  }
 }
 ```
 
@@ -185,14 +215,17 @@ curl -X POST http://localhost:8080/api/command/setOutputPriority \
 # Or use the web interface at http://localhost:8080/control/
 ```
 
-## Metrics
+## Metrics & Monitoring
 
-The gateway exposes various Axpert inverter metrics in Prometheus format, including:
+The gateway exposes comprehensive Axpert inverter metrics in Prometheus format, including:
 
-- Power generation and consumption data
-- Battery status and voltage levels
-- Inverter operational parameters
-- System health indicators
+### Metrics
+- **Power Data** - AC/DC input/output power, load percentages
+- **Battery Status** - Voltage levels, charge state, temperature
+- **Inverter Parameters** - Operating mode, priorities, efficiency
+- **System Health** - Device status, warnings, error conditions
+
+Metrics are collected with a `serialno` label (multiple connected inverters supported) and the collection interval is configurable (default: 30s).
 
 Access metrics at: `http://localhost:8080/metrics`
 
@@ -248,6 +281,11 @@ Create dashboards to visualize:
    - Check inverter connectivity
    - Verify polling interval settings
    - Review application logs
+
+4. **Settings Not Available (503 Error)**
+   - Settings are cached during metrics collection cycles
+   - Wait for next collection cycle (default: 30 seconds)
+   - Ensure metrics collection is enabled (`--axpert.metrics=true`)
 
 ## License
 
