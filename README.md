@@ -253,12 +253,7 @@ scrape_configs:
 
 ### Grafana Dashboard
 
-Create dashboards to visualize:
-- Solar power generation
-- Battery charge levels
-- Load consumption
-- Inverter efficiency
-- System alerts
+An example of a Grafana dashboard can be found in `./dashboard/axpert-grafana.json`.
 
 ## Troubleshooting
 
