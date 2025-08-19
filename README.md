@@ -121,6 +121,8 @@ The gateway includes a control API and web interface for managing your Axpert in
 
 Access the web interface at: `http://localhost:8080/control/`
 
+![Web Control Interface](static/control.jpg)
+
 **Features:**
 - **Real-time Settings Display** - View current inverter configuration and status
 - **Multi-inverter Support** - Switch between multiple connected inverters
@@ -254,6 +256,8 @@ scrape_configs:
 ### Grafana Dashboard
 
 An example of a Grafana dashboard can be found in `./dashboard/axpert-grafana.json`.
+
+![Grafana Dashboard](static/dashboard.jpg)
 
 ## Troubleshooting
 
