@@ -457,7 +457,7 @@ func (a *Application) CalculateMetrics() {
 			log.Debugf("%+v", pi)
 
 			if err := inv.UpdateCurrentSettings(pi); err != nil {
-				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
+				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 			}
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
@@ -483,7 +483,7 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.BatteryFloatVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryFloatVoltage))
 
 			if err := inv.UpdateCurrentSettings(ri); err != nil {
-				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
+				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 			}
 		}
 
@@ -520,7 +520,7 @@ func (a *Application) CalculateMetrics() {
 				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
 				if err := inv.UpdateCurrentSettings(md); err != nil {
-					log.Errorf("error: failed to update current settings for device with serialno '%s': %s", err)
+					log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 				}
 
 				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(mode)
@@ -547,7 +547,6 @@ func (a *Application) CalculateMetrics() {
 	}
 
 	a.Prometheus.Metrics.ScrapeError.Set(0)
-	return
 }
 
 func parseDeviceMode(m string) (float64, error) {

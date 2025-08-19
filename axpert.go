@@ -45,19 +45,19 @@ func (i *Inverter) UpdateCurrentSettings(input any) error {
 		if cs := mapChargeSource(inp.ACCharging); cs != "" {
 			i.CurrentSettings.ChargeSource = cs
 		} else {
-			return fmt.Errorf("Unrecognized charge source: %s", inp.ACCharging)
+			return fmt.Errorf("Unrecognized charge source: %v", inp.ACCharging)
 		}
 	case *axpert.RatingInfo:
 		if osp := mapOutputSourcePriority(inp.OutputSourcePriority); osp != "" {
 			i.CurrentSettings.OutputSourcePriority = osp
 		} else {
-			return fmt.Errorf("Unrecognized output source priority: %s", inp.OutputSourcePriority)
+			return fmt.Errorf("Unrecognized output source priority: %v", inp.OutputSourcePriority)
 		}
 
 		if csp := mapChargerSourcePriority(inp.ChargerSourcePriority); csp != "" {
 			i.CurrentSettings.ChargerSourcePriority = csp
 		} else {
-			return fmt.Errorf("Unrecognized charger source priority: %s", inp.ChargerSourcePriority)
+			return fmt.Errorf("Unrecognized charger source priority: %v", inp.ChargerSourcePriority)
 		}
 
 		i.CurrentSettings.BatteryRechargeVoltage = inp.BatteryRechargeVoltage
