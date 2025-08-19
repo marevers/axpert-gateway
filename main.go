@@ -36,7 +36,7 @@ func main() {
 	log.Infoln("Initialising inverters connected through USB")
 	invs, err := initInverters()
 	if err != nil {
-		log.Fatalln("error: failed to initialise inverters:", err)
+		log.Fatalln("failed to initialise inverters:", err)
 	}
 	app.Inverters = invs
 	for _, inv := range app.Inverters {

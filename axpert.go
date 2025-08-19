@@ -14,7 +14,7 @@ func initInverters() ([]*Inverter, error) {
 
 	crs, err := axpert.GetUSBInverters()
 	if err != nil {
-		return nil, errors.New("error: no Axpert inverters found")
+		return nil, errors.New("no Axpert inverters found")
 	}
 
 	for _, cr := range crs {
@@ -24,7 +24,7 @@ func initInverters() ([]*Inverter, error) {
 
 		sn, err := axpert.SerialNo(cr)
 		if err != nil {
-			return nil, errors.New("error: failed to retrieve serial number")
+			return nil, errors.New("failed to retrieve serial number")
 		}
 		inv.SerialNo = sn
 
@@ -45,19 +45,19 @@ func (i *Inverter) UpdateCurrentSettings(input any) error {
 		if cs := mapChargeSource(inp.ACCharging); cs != "" {
 			i.CurrentSettings.ChargeSource = cs
 		} else {
-			return fmt.Errorf("Unrecognized charge source: %v", inp.ACCharging)
+			return fmt.Errorf("unrecognized charge source: %v", inp.ACCharging)
 		}
 	case *axpert.RatingInfo:
 		if osp := mapOutputSourcePriority(inp.OutputSourcePriority); osp != "" {
 			i.CurrentSettings.OutputSourcePriority = osp
 		} else {
-			return fmt.Errorf("Unrecognized output source priority: %v", inp.OutputSourcePriority)
+			return fmt.Errorf("unrecognized output source priority: %v", inp.OutputSourcePriority)
 		}
 
 		if csp := mapChargerSourcePriority(inp.ChargerSourcePriority); csp != "" {
 			i.CurrentSettings.ChargerSourcePriority = csp
 		} else {
-			return fmt.Errorf("Unrecognized charger source priority: %v", inp.ChargerSourcePriority)
+			return fmt.Errorf("unrecognized charger source priority: %v", inp.ChargerSourcePriority)
 		}
 
 		i.CurrentSettings.BatteryRechargeVoltage = inp.BatteryRechargeVoltage
@@ -68,7 +68,7 @@ func (i *Inverter) UpdateCurrentSettings(input any) error {
 		if dMode := mapDeviceMode(inp); dMode != "" {
 			i.CurrentSettings.DeviceMode = dMode
 		} else {
-			return fmt.Errorf("Unrecognized device mode: %s", inp)
+			return fmt.Errorf("unrecognized device mode: %s", inp)
 		}
 	default:
 		return fmt.Errorf("unknown input type: %T", inp)
@@ -89,7 +89,7 @@ func setOutputSourcePriority(c connector.Connector, p string) error {
 	case "sbu":
 		osp = axpert.OutputSBUFirst
 	default:
-		return fmt.Errorf("error: unrecognized output source priority: %s", p)
+		return fmt.Errorf("unrecognized output source priority: %s", p)
 	}
 
 	err := axpert.SetOutputSourcePriority(c, osp)
@@ -114,7 +114,7 @@ func setChargerSourcePriority(c connector.Connector, p string) error {
 	case "solaronly":
 		csp = axpert.ChargerSolarOnly
 	default:
-		return fmt.Errorf("error: unrecognized charger source priority: %s", p)
+		return fmt.Errorf("unrecognized charger source priority: %s", p)
 	}
 
 	err := axpert.SetChargerSourcePriority(c, csp)
@@ -129,13 +129,13 @@ func setChargerSourcePriority(c connector.Connector, p string) error {
 func setBatteryRechargeVoltage(c connector.Connector, cs *CurrentSettings, v float32) error {
 	switch {
 	case (v < 44 || v > 51) || !isWhole(v): // Invalid value
-		return fmt.Errorf("error: battery recharge voltage must be a whole number between 44 and 51 V")
+		return fmt.Errorf("battery recharge voltage must be a whole number between 44 and 51 V")
 	case v > cs.BatteryRedischargeVoltage: // Exceeds the redischarge voltage
-		return fmt.Errorf("error: battery recharge voltage may not exceed redischarge voltage")
+		return fmt.Errorf("battery recharge voltage may not exceed redischarge voltage")
 	case v > cs.BatteryFloatVoltage: // Exceeds the float voltage
-		return fmt.Errorf("error: battery recharge voltage may not exceed float voltage")
+		return fmt.Errorf("battery recharge voltage may not exceed float voltage")
 	case v < cs.BatteryCutoffVoltage: // Lower than cutoff voltage
-		return fmt.Errorf("error: battery recharge voltage may not be lower than cutoff voltage")
+		return fmt.Errorf("battery recharge voltage may not be lower than cutoff voltage")
 	}
 
 	if err := axpert.SetBatteryRechargeVoltage(c, v); err != nil {
@@ -149,13 +149,13 @@ func setBatteryRechargeVoltage(c connector.Connector, cs *CurrentSettings, v flo
 func setBatteryRedischargeVoltage(c connector.Connector, cs *CurrentSettings, v float32) error {
 	switch {
 	case (v < 48 || v > 58) || !isWhole(v): // Invalid value
-		return fmt.Errorf("error: battery redischarge voltage must be a whole number between 48 and 58 V")
+		return fmt.Errorf("battery redischarge voltage must be a whole number between 48 and 58 V")
 	case v < cs.BatteryRechargeVoltage: // Lower than redischarge voltage
-		return fmt.Errorf("error: battery redischarge voltage may not be lower than recharge voltage")
+		return fmt.Errorf("battery redischarge voltage may not be lower than recharge voltage")
 	case v > cs.BatteryFloatVoltage: // Exceeds the float voltage
-		return fmt.Errorf("error: battery redischarge voltage may not exceed float voltage")
+		return fmt.Errorf("battery redischarge voltage may not exceed float voltage")
 	case v < cs.BatteryCutoffVoltage: // Lower than cutoff voltage
-		return fmt.Errorf("error: battery redischarge voltage may not be lower than cutoff voltage")
+		return fmt.Errorf("battery redischarge voltage may not be lower than cutoff voltage")
 	}
 
 	if err := axpert.SetBatteryRedischargeVoltage(c, v); err != nil {

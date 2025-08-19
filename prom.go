@@ -418,7 +418,7 @@ func (a *Application) CalculateMetrics() {
 		dsp, err := axpert.DeviceGeneralStatus(inv.Connector)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve device general status from from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve device general status from from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("device general status:")
 			log.Debugf("%+v", dsp)
@@ -451,13 +451,13 @@ func (a *Application) CalculateMetrics() {
 		pi, err := axpert.ParallelDeviceInfo(inv.Connector, 0)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve parallel device info from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve parallel device info from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("parallel device information:")
 			log.Debugf("%+v", pi)
 
 			if err := inv.UpdateCurrentSettings(pi); err != nil {
-				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
+				log.Errorf("failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 			}
 
 			a.Prometheus.Metrics.LoadOnVec.WithLabelValues(labelValues...).Set(convertBoolToFloat(pi.LoadOn))
@@ -469,7 +469,7 @@ func (a *Application) CalculateMetrics() {
 		ri, err := axpert.DeviceRatingInfo(inv.Connector)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve rating info from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve rating info from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("rating information:")
 			log.Debugf("%+v", ri)
@@ -483,7 +483,7 @@ func (a *Application) CalculateMetrics() {
 			a.Prometheus.Metrics.BatteryFloatVoltageVec.WithLabelValues(labelValues...).Set(float64(ri.BatteryFloatVoltage))
 
 			if err := inv.UpdateCurrentSettings(ri); err != nil {
-				log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
+				log.Errorf("failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 			}
 		}
 
@@ -493,7 +493,7 @@ func (a *Application) CalculateMetrics() {
 		wns, err := axpert.WarningStatus(inv.Connector)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve warnings from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("wns:")
 			log.Debugf("%+v", wns)
@@ -510,17 +510,17 @@ func (a *Application) CalculateMetrics() {
 		md, err := axpert.DeviceMode(inv.Connector)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve device mode from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve device mode from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("device mode:", md)
 
 			mode, err := parseDeviceMode(md)
 			if err != nil {
 				scrapeErr = true
-				log.Errorf("error: failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
+				log.Errorf("failed to parse device mode from device with serialno '%s': %s", inv.SerialNo, err)
 			} else {
 				if err := inv.UpdateCurrentSettings(md); err != nil {
-					log.Errorf("error: failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
+					log.Errorf("failed to update current settings for device with serialno '%s': %s", inv.SerialNo, err)
 				}
 
 				a.Prometheus.Metrics.DeviceModeVec.WithLabelValues(labelValues...).Set(mode)
@@ -531,7 +531,7 @@ func (a *Application) CalculateMetrics() {
 		om, err := axpert.DeviceOutputMode(inv.Connector)
 		if err != nil {
 			scrapeErr = true
-			log.Errorf("error: failed to retrieve device output mode from device with serialno '%s'", inv.SerialNo)
+			log.Errorf("failed to retrieve device output mode from device with serialno '%s'", inv.SerialNo)
 		} else {
 			log.Debugln("device output mode:", om)
 
@@ -564,7 +564,7 @@ func parseDeviceMode(m string) (float64, error) {
 	case "H": // PowerSaving
 		return 5.0, nil
 	default:
-		return -1.0, fmt.Errorf("error: unknown device mode: %s", m)
+		return -1.0, fmt.Errorf("unknown device mode: %s", m)
 	}
 }
 
